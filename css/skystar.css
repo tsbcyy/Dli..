@@ -10,37 +10,53 @@ body {
     position: relative;
     overflow: hidden;
     perspective: 1300px;
+    background-color: #0b0a1a; 
 }
 #videofilm {
     width: 100%;
-    height: 100%;
+    height: 100%;    
+    object-fit: cover;  
     position: fixed;
     z-index: -1;
-  }
-  h1{
-    font-size: clamp(18px, 5vw, 36px);
+    top: 0;
+    left: 0;
+}
+h1 {
+    font-size: clamp(18px, 5vw, 36px); 
     color: #B1BCE6;
     font-family: '楷体';
     text-align: center;
-  }
-.texttwo {
+    width: 90%; 
+}
+.textone, .texttwo, .textthree {
     position: absolute;
     left: 50%;
-    top: 50%;
     transform: translateX(-50%);
+    width: 100%;
+    text-align: center;
+    z-index: 3; 
 }
-.textone {
+.textone { top: 40%; }
+.texttwo { top: 50%; }
+.textthree { top: 60%; }
+
+@media (max-width: 600px) {
+    .textone { top: 30%; }
+    .texttwo { top: 50%; }
+    .textthree { top: 70%; }
+}
+
+.container {
     position: absolute;
-    left: 50%;
-    top: 40%;
-    transform: translateX(-50%);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: 1;
+    pointer-events: none; 
 }
-.textthree {
-    position: absolute;
-    left: 50%;
-    top: 60%;
-    transform: translateX(-50%);
-}
+
 :root {
     --margin-top: 0;
     --margin-left: 0;
@@ -51,24 +67,19 @@ div {
     transform-style: preserve-3d;
 }
 .word-box,
-.word-box .word{
-position: absolute;
-animation: rotY 0s linear infinite;
-animation-duration: var(--animation-duration);
-animation-delay: var(--animation-delay);
+.word-box .word {
+    position: absolute;
+    animation: rotY 0s linear infinite;
+    animation-duration: var(--animation-duration);
+    animation-delay: var(--animation-delay);
 }
-.word-box{
+.word-box {
     margin-top: var(--margin-top);
 }
-.word-box .word{
-    margin-left: var(--margin-left);
-}
 .word-box .word {
+    margin-left: var(--margin-left);
     animation-duration: reverse;
 }
 @keyframes rotY {
-    to{
-        transform: rotateY(360deg);
-    }
-    
+    to { transform: rotateY(360deg); }
 }
