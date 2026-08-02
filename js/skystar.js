@@ -26,7 +26,7 @@ function init() {
         word.classList.add('word');
         word.style.color = '#BAABDA';
         word.style.fontFamily = '楷体';
-        word.style.fontSize = isMobile ? '14px' : '20px'; // 手机端字小一点
+        word.style.fontSize = isMobile ? '14px' : '20px';
         
         word_box.classList.add('word-box');
         word_box.style.setProperty("--margin-top", randomNum(-40, 20) + 'vh');
@@ -47,37 +47,34 @@ let textone = document.querySelector('.textone').querySelector('h1');
 let texttwo = document.querySelector('.texttwo').querySelector('h1');
 let textthree = document.querySelector('.textthree').querySelector('h1');
 
-// 28秒后切换
 setTimeout(function() {
     textone.innerHTML = '新的一岁，愿你闪闪发光';
     textone.style.color = '#E8F9FD';
     texttwo.style.color = '#E8F9FD';
     textthree.style.color = '#E8F9FD';
-    texttwo.innerHTML = ''; // 清空中间一行
+    texttwo.innerHTML = '';
     textthree.innerHTML = '万事皆可期待';
 }, 28000);
 
-// 112.5秒后切换
 setTimeout(function() {
     textone.innerHTML = '祝你生日快乐';
     texttwo.innerHTML = '不止今天';
     textthree.innerHTML = '而是未来每一天';
 }, 112500);
 
-// ---------------- 解决手机自动播放音乐的技巧 ----------------
-// 浏览器必须通过用户手势才能播放有声视频/音频
-// 我们让页面加载时“静音自动播放”，用户第一次点击屏幕时自动“取消静音”
+// ---------------- 修复：解决因音频缺失导致报错的问题 ----------------
 document.addEventListener('DOMContentLoaded', function() {
     const audio = document.querySelector('audio');
-    // 首次用户交互时，取消静音
-    const unmuteAudio = () => {
-        if (audio.muted) {
-            audio.muted = false; // 声音出来了！
-            // 移除监听器，只执行一次
-            document.removeEventListener('click', unmuteAudio);
-            document.removeEventListener('touchstart', unmuteAudio);
-        }
-    };
-    document.addEventListener('click', unmuteAudio);
-    document.addEventListener('touchstart', unmuteAudio);
+    // 关键：必须判断 audio 是否存在，否则会报错导致页面卡顿
+    if (audio) {
+        const unmuteAudio = () => {
+            if (audio.muted) {
+                audio.muted = false;
+                document.removeEventListener('click', unmuteAudio);
+                document.removeEventListener('touchstart', unmuteAudio);
+            }
+        };
+        document.addEventListener('click', unmuteAudio);
+        document.addEventListener('touchstart', unmuteAudio);
+    }
 });
