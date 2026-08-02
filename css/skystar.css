@@ -1,4 +1,4 @@
-*{
+* {
     margin: 0;
     padding: 0;
 }
@@ -10,24 +10,34 @@ body {
     position: relative;
     overflow: hidden;
     perspective: 1300px;
-    background-color: #0b0a1a; /* 视频加载前的深色背景 */
+    background-color: #0b0a1a;
 }
 #videofilm {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* 关键：铺满屏幕，不留黑边 */
+    object-fit: cover;
     position: fixed;
     z-index: -1;
     top: 0;
     left: 0;
 }
+/* 粒子层定位 */
+#particles-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+}
 h1 {
-    font-size: clamp(18px, 5vw, 36px); /* 手机 18px，电脑 36px */
+    font-size: clamp(18px, 5vw, 36px);
     color: #B1BCE6;
     font-family: '楷体', 'KaiTi', serif;
     text-align: center;
     width: 90%;
-    text-shadow: 0 0 10px rgba(177, 188, 230, 0.3); /* 增加发光感更温馨 */
+    text-shadow: 0 0 10px rgba(177, 188, 230, 0.3);
 }
 .textone, .texttwo, .textthree {
     position: absolute;
@@ -41,7 +51,6 @@ h1 {
 .texttwo { top: 50%; }
 .textthree { top: 60%; }
 
-/* 针对手机竖屏微调位置 */
 @media (max-width: 600px) {
     .textone { top: 30%; }
     .texttwo { top: 48%; }
@@ -56,7 +65,7 @@ h1 {
     height: 100%;
     overflow: hidden;
     z-index: 1;
-    pointer-events: none; /* 防止遮挡手机触摸滑动 */
+    pointer-events: none;
 }
 
 :root {
@@ -68,20 +77,29 @@ h1 {
 div {
     transform-style: preserve-3d;
 }
-.word-box,
+
+/* 关键：文字淡入 + 旋转动画 */
+.word-box {
+    position: absolute;
+    margin-top: var(--margin-top);
+    animation: 
+        fadeIn 1.2s forwards, 
+        rotY var(--animation-duration) linear infinite;
+    animation-delay: var(--animation-delay);
+    opacity: 0; /* 初始透明 */
+}
 .word-box .word {
     position: absolute;
-    animation: rotY 0s linear infinite;
-    animation-duration: var(--animation-duration);
-    animation-delay: var(--animation-delay);
-}
-.word-box {
-    margin-top: var(--margin-top);
-}
-.word-box .word {
     margin-left: var(--margin-left);
     animation-duration: reverse;
+    color: #BAABDA;
+    font-family: '楷体';
 }
+
 @keyframes rotY {
     to { transform: rotateY(360deg); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
 }
