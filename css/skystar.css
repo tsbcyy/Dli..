@@ -10,23 +10,24 @@ body {
     position: relative;
     overflow: hidden;
     perspective: 1300px;
-    background-color: #0b0a1a; 
+    background-color: #0b0a1a; /* 视频加载前的深色背景 */
 }
 #videofilm {
     width: 100%;
-    height: 100%;    
-    object-fit: cover;  
+    height: 100%;
+    object-fit: cover; /* 关键：铺满屏幕，不留黑边 */
     position: fixed;
     z-index: -1;
     top: 0;
     left: 0;
 }
 h1 {
-    font-size: clamp(18px, 5vw, 36px); 
+    font-size: clamp(18px, 5vw, 36px); /* 手机 18px，电脑 36px */
     color: #B1BCE6;
-    font-family: '楷体';
+    font-family: '楷体', 'KaiTi', serif;
     text-align: center;
-    width: 90%; 
+    width: 90%;
+    text-shadow: 0 0 10px rgba(177, 188, 230, 0.3); /* 增加发光感更温馨 */
 }
 .textone, .texttwo, .textthree {
     position: absolute;
@@ -40,10 +41,11 @@ h1 {
 .texttwo { top: 50%; }
 .textthree { top: 60%; }
 
+/* 针对手机竖屏微调位置 */
 @media (max-width: 600px) {
     .textone { top: 30%; }
-    .texttwo { top: 50%; }
-    .textthree { top: 70%; }
+    .texttwo { top: 48%; }
+    .textthree { top: 66%; }
 }
 
 .container {
@@ -54,7 +56,7 @@ h1 {
     height: 100%;
     overflow: hidden;
     z-index: 1;
-    pointer-events: none; 
+    pointer-events: none; /* 防止遮挡手机触摸滑动 */
 }
 
 :root {
