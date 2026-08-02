@@ -1,4 +1,4 @@
-// ---------- 1. 生日祝福词汇（逐步显示） ----------
+// ---------- 1. 生日祝福词汇 ----------
 var words = [
     '生日快乐', '万事胜意', '平安喜乐', '前程似锦', 
     '岁岁常欢愉', '年年皆胜意', '未来可期', '所愿皆成真',
@@ -13,7 +13,7 @@ function randomNum(min, max) {
     return (Math.random() * (max - min + 1) + min).toFixed(2);
 }
 
-// ---------- 2. 逐步生成文字（不一次性铺满） ----------
+// ---------- 2. 背景词“逐步浮现”（加速，300ms一个） ----------
 function init() {
     let container = document.querySelector('.container');
     let isMobile = window.innerWidth <= 600;
@@ -22,32 +22,26 @@ function init() {
     function appendWord() {
         if (index >= words.length) return;
         let w = words[index];
-
         let word_box = document.createElement('div');
         let word = document.createElement('div');
         word.innerText = w;
         word.classList.add('word');
-        // 手机字号更小，保证竖屏不溢出
         word.style.fontSize = isMobile ? '12px' : '18px';
 
         word_box.classList.add('word-box');
-        
-        // 调整间距：为了让每段距离不要太远，大幅缩小了垂直偏移范围
-        // 手机端范围更小
-        let vhRange = isMobile ? [-8, 8] : [-15, 18]; 
+        let vhRange = isMobile ? [-6, 6] : [-12, 12]; // 更紧凑，不飘远
         let vwRange = isMobile ? [5, 25] : [8, 35];
 
         word_box.style.setProperty("--margin-top", randomNum(vhRange[0], vhRange[1]) + 'vh');
         word_box.style.setProperty("--margin-left", randomNum(vwRange[0], vwRange[1]) + 'vw');
-        word_box.style.setProperty("--animation-duration", randomNum(8, 20) + 's');
-        word_box.style.setProperty("--animation-delay", randomNum(-5, 0) + 's'); // 随机延迟错开旋转
+        word_box.style.setProperty("--animation-duration", randomNum(8, 15) + 's');
+        word_box.style.setProperty("--animation-delay", randomNum(-3, 0) + 's');
 
         word_box.appendChild(word);
         container.appendChild(word_box);
-
         index++;
-        // 每隔 400ms 出现一个，逐步浮现
-        setTimeout(appendWord, 400);
+        // 300毫秒出现一个，2秒内涌现完
+        setTimeout(appendWord, 300);
     }
     appendWord();
 }
@@ -62,20 +56,18 @@ function initParticles() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
     particles = [];
-    // 生成 70 个粉色粒子
     for (let i = 0; i < 70; i++) {
         particles.push({
             x: Math.random() * width,
             y: Math.random() * height,
-            vx: (Math.random() - 0.5) * 0.6, // 水平飘动速度
-            vy: (Math.random() - 0.5) * 0.6, // 垂直飘动速度
-            radius: Math.random() * 3 + 1,   // 粒子大小
-            alpha: Math.random() * 0.6 + 0.3, // 透明度
-            color: `hsla(340, 80%, 70%, ${Math.random() * 0.5 + 0.3})` // 粉红色系
+            vx: (Math.random() - 0.5) * 0.6,
+            vy: (Math.random() - 0.5) * 0.6,
+            radius: Math.random() * 3 + 1,
+            alpha: Math.random() * 0.6 + 0.3,
+            color: `hsla(340, 80%, 70%, ${Math.random() * 0.5 + 0.3})`
         });
     }
 }
-
 function drawParticles() {
     ctx.clearRect(0, 0, width, height);
     particles.forEach(p => {
@@ -83,45 +75,40 @@ function drawParticles() {
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
         ctx.fill();
-
-        // 移动
         p.x += p.vx;
         p.y += p.vy;
-
-        // 边界反弹，保证粒子一直在屏幕内
         if (p.x < 0 || p.x > width) p.vx *= -1;
         if (p.y < 0 || p.y > height) p.vy *= -1;
     });
     requestAnimationFrame(drawParticles);
 }
-
-window.addEventListener('resize', () => {
-    initParticles();
-});
+window.addEventListener('resize', initParticles);
 initParticles();
 drawParticles();
 
-// ---------- 4. 文字定时切换逻辑 ----------
+// ---------- 4. 主标题文字切换（严格控制在2分钟内 120s） ----------
 let textone = document.querySelector('.textone').querySelector('h1');
 let texttwo = document.querySelector('.texttwo').querySelector('h1');
 let textthree = document.querySelector('.textthree').querySelector('h1');
 
+// 第一变：25秒时（缩短）
 setTimeout(function() {
     textone.innerHTML = '新的一岁，愿你闪闪发光';
-    textone.style.color = '#E8F9FD';
-    texttwo.style.color = '#E8F9FD';
-    textthree.style.color = '#E8F9FD';
-    texttwo.innerHTML = '';
+    texttwo.innerHTML = '';     // 清空中间
     textthree.innerHTML = '万事皆可期待';
-}, 28000);
+}, 25000);
 
+// 第二变：80秒时（缩短）
 setTimeout(function() {
     textone.innerHTML = '祝你生日快乐';
     texttwo.innerHTML = '不止今天';
     textthree.innerHTML = '而是未来每一天';
-}, 112500);
+}, 80000);
 
-// ---------- 5. 音乐自动播放解锁（点击屏幕取消静音） ----------
+// 在 120秒（2分钟）时，确保所有的淡入动画都已完成，并且保持展示
+// (无需额外动作，因为前面已经在 80 秒切换完了)
+
+// ---------- 5. 音乐自动播放解锁 ----------
 document.addEventListener('DOMContentLoaded', function() {
     const audio = document.querySelector('audio');
     if (audio) {
