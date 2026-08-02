@@ -8,11 +8,14 @@
     <link rel="stylesheet" href="css/skystar.css">
   </head>
   <body>
-    <!-- 添加 playsinline 解决 iOS 视频自动全屏问题 -->
+    <!-- 视频背景 -->
     <video id="videofilm" poster="img/skystar2.jpg" autoplay muted loop playsinline>
       <source src="video/skystar.mp4" type="video/mp4">
     </video>
     
+    <!-- 增加粉色粒子 Canvas -->
+    <canvas id="particles-canvas"></canvas>
+
     <div class="textone">
       <h1>生日快乐</h1>
     </div>
@@ -23,7 +26,6 @@
       <h1>年年皆胜意</h1>
     </div>
 
-    <!-- 音频添加 muted，保证能自动加载 -->
     <audio src="video/晴天.mp3" autoplay loop muted></audio>
     
     <div class="container"></div>
