@@ -35,16 +35,15 @@ body { display: flex; align-items: center; justify-content: center; position: re
 .entry-loading { display: flex; align-items: center; justify-content: center; margin-top: 15px; color: #FFB7C5; font-size: 14px; gap: 10px; }
 .loader-small { width: 18px; height: 18px; border: 2px solid rgba(255, 183, 197, 0.2); border-top: 2px solid #FFB7C5; border-radius: 50%; animation: spin 1s linear infinite; }
 
-/* --- 主界面：彻底消除黑边 --- */
+/* --- 主界面：强制填满底部 --- */
 #main-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }
 #static-bg {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: url('../img/skystar2.jpg') no-repeat center center;
-    background-size: cover; /* 强制铺满 */
+    background-size: cover;
 }
 #videofilm {
     position: absolute; top: 0; left: 0;
-    /* 核心：强制拉伸覆盖，不留黑边 */
     min-width: 100vw; min-height: 100vh;
     object-fit: cover; object-position: center bottom;
 }
@@ -54,9 +53,9 @@ body { display: flex; align-items: center; justify-content: center; position: re
     position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;
 }
 #particles-canvas { z-index: 1; }
-#text-canvas { z-index: 4; } /* 主标题最高层 */
+#text-canvas { z-index: 4; }
 
-/* --- 悬浮祝福语：完美绕中心公转 --- */
+/* --- 悬浮祝福语 --- */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     overflow: hidden; z-index: 2; pointer-events: none;
@@ -64,7 +63,6 @@ body { display: flex; align-items: center; justify-content: center; position: re
 :root { --dist: 20vw; --deg: 0deg; --speed: 10s; --delay: 0s; }
 .word-box {
     position: absolute; top: 50%; left: 50%;
-    /* 核心：绕中心公转 */
     animation: orbit var(--speed) linear infinite;
     animation-delay: var(--delay); opacity: 0;
 }
