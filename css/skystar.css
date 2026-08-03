@@ -4,7 +4,7 @@ body {
     position: relative; overflow: hidden; background-color: #0b0a1a;
 }
 
-/* --- 前置输入页 --- */
+/* --- 前置输入页 (完整保留) --- */
 #entry-screen {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
     background: radial-gradient(circle at center, #1a0b1e, #0a0410);
@@ -40,8 +40,12 @@ body {
     background: url('../img/skystar2.jpg') no-repeat center center;
     background-size: cover; z-index: -2;
 }
+
+/* 【核心修改】视频底部对齐屏幕 */
 #videofilm {
-    width: 100%; height: 100%; object-fit: cover;
+    width: 100%; height: 100%; 
+    object-fit: cover;
+    object-position: bottom center; /* 强制底部对齐，星空/雪地会完美贴合屏幕下边缘 */
     position: fixed; z-index: -1; top: 0; left: 0;
 }
 #particles-canvas, #text-canvas {
@@ -50,11 +54,10 @@ body {
 }
 #particles-canvas { z-index: 1; }
 
-/* 公转悬浮词（【核心修复】从 z-index:0 提升到 3） */
+/* 公转悬浮词 */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    overflow: hidden; z-index: 3; /* 确保出现在粒子层上方 */
-    pointer-events: none;
+    overflow: hidden; z-index: 3; pointer-events: none;
 }
 :root { --dist: 20vw; --deg: 0deg; --speed: 10s; --delay: 0s; }
 .word-box {
