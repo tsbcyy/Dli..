@@ -55,14 +55,11 @@ body { display: flex; align-items: center; justify-content: center; position: re
 #particles-canvas { z-index: 1; }
 #text-canvas { z-index: 4; }
 
-/* --- 悬浮祝福语（极简触发） --- */
+/* --- 悬浮祝福语 --- */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    overflow: hidden; z-index: 5; pointer-events: none;
-    /* 不玩花哨过渡，直接 display: none 控制，简单粗暴 */
-    display: none;
+    overflow: hidden; z-index: 5; pointer-events: none; display: none;
 }
-.container.show { display: block; }
 :root { --dist: 20vw; --deg: 0deg; --speed: 10s; --delay: 0s; }
 .word-box {
     position: absolute; top: 50%; left: 50%;
@@ -71,20 +68,18 @@ body { display: flex; align-items: center; justify-content: center; position: re
 }
 .word-box .word {
     position: absolute;
-    color: #FFB7C5;
-    font-family: '楷体';
-    text-shadow: 0 0 8px rgba(255, 105, 180, 0.5);
+    color: #FFB7C5; font-family: '楷体';
+    text-shadow: 0 0 8px rgba(255, 105, 180, 0.6);
     animation: fadeInWord 0.8s forwards; 
-    animation-delay: var(--delay);
-    opacity: 0;
+    animation-delay: var(--delay); opacity: 0;
 }
 @keyframes orbit {
     0% { transform: translate(-50%, -50%) rotate(var(--deg)) translateX(var(--dist)) rotate(calc(var(--deg) * -1)); }
     100% { transform: translate(-50%, -50%) rotate(calc(var(--deg) + 360deg)) translateX(var(--dist)) rotate(calc(0deg - var(--deg) - 360deg)); }
 }
-@keyframes fadeInWord { 
-    from { opacity: 0; transform: scale(0.6); } 
-    to { opacity: 1; transform: scale(1); } 
+@keyframes fadeInWord {
+    from { opacity: 0; transform: scale(0.6); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 /* --- 完结层 --- */
