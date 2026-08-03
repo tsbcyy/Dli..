@@ -32,7 +32,7 @@ h1 {
     opacity: 0;
 }
 
-/* ----- 核心修正：浮动祝福词 ----- */
+/* ----- 悬浮词居中立柱，用margin散开 ----- */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     overflow: hidden; z-index: 1; pointer-events: none;
@@ -42,24 +42,22 @@ div { transform-style: preserve-3d; }
 
 .word-box {
     position: absolute;
-    /* 锚点定在屏幕正中心 */
     top: 50%; left: 50%;
-    /* 用 margin 将元素向外偏移，完美避开与 transform 的冲突 */
+    /* 锚点锁定正中心 */
+    transform: translate(-50%, -50%);
+    /* 用 margin 向外扩散，模拟满天星 */
     margin-top: var(--margin-top);
     margin-left: var(--margin-left);
-    /* transform 全部留给旋转动画 */
-    transform: translate(-50%, -50%);
     animation: fadeIn 0.8s forwards, rotY var(--animation-duration) linear infinite;
     animation-delay: var(--animation-delay);
     opacity: 0;
-    perspective: 600px; /* 增加 3D 立体感 */
+    perspective: 800px;
 }
 .word-box .word {
     position: absolute;
     color: #BAABDA; font-family: '楷体';
 }
 
-/* 原地 3D 旋转（绕自身中心轴） */
 @keyframes rotY {
     to { transform: translate(-50%, -50%) rotateY(360deg); }
 }
