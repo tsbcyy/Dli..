@@ -1,3 +1,4 @@
+// ---------- 1. 生日祝福词汇（保持旋转，不消失） ----------
 var words = [
     '生日快乐', '万事胜意', '平安喜乐', '前程似锦', 
     '岁岁常欢愉', '年年皆胜意', '未来可期', '所愿皆成真',
@@ -12,41 +13,31 @@ function randomNum(min, max) {
     return (Math.random() * (max - min + 1) + min).toFixed(2);
 }
 
-// 打乱数组（换页时洗牌）
-function shuffleArray(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-}
-
+// ---------- 2. 生成固定悬浮词（像最初的分布一样散开，但以中心为锚点） ----------
 function renderWords() {
     let container = document.querySelector('.container');
-    container.innerHTML = ''; 
     let isMobile = window.innerWidth <= 600;
-    let shuffled = shuffleArray([...words]);
     let index = 0;
 
     function appendWord() {
-        if (index >= shuffled.length) return;
-        let w = shuffled[index];
+        if (index >= words.length) return;
+        let w = words[index];
         let word_box = document.createElement('div');
         let word = document.createElement('div');
         word.innerText = w;
         word.classList.add('word');
-        word.style.fontSize = isMobile ? '11px' : '16px';
+        // 手机端小字体，保证不拥挤
+        word.style.fontSize = isMobile ? '12px' : '18px';
 
         word_box.classList.add('word-box');
 
-        // --- 间距缩小到原来的一半 ---
-        // 垂直偏移从 [-6, 6] 变 [-3, 3]
-        let marginTop = randomNum(-3, 3) + 'vh';
-        // 水平偏移从 [5, 25] 变 [-8, 8]（以中心为原点对称）
-        let marginLeft = randomNum(-8, 8) + 'vw';
+        // --- 核心：“满天星”散射，绝不重叠 ---
+        // 手机竖屏水平范围小，用 vw 控制，垂直范围大，用 vh
+        let mt = randomNum(-30, 30) + 'vh'; // 上下散开 
+        let ml = randomNum(-25, 25) + 'vw'; // 左右散开
         
-        word_box.style.setProperty("--margin-top", marginTop);
-        word_box.style.setProperty("--margin-left", marginLeft);
+        word_box.style.setProperty("--margin-top", mt);
+        word_box.style.setProperty("--margin-left", ml);
         
         word_box.style.setProperty("--animation-duration", randomNum(8, 15) + 's');
         word_box.style.setProperty("--animation-delay", randomNum(-3, 0) + 's');
@@ -54,20 +45,48 @@ function renderWords() {
         word_box.appendChild(word);
         container.appendChild(word_box);
         index++;
-        // 逐段显现（每 300ms 出现一句）
+        // 逐字浮现
         setTimeout(appendWord, 300);
     }
     appendWord();
 }
 
+// 首次加载生成，永不刷新
 window.addEventListener('load', renderWords);
 
-// 换页按钮：清空旧词，生成新词
+// ---------- 3. 按钮换文字（只换主标题，不碰悬浮词） ----------
+// 准备三组标题文字
+var titleGroups = [
+    { one: "生日快乐", two: "愿你岁岁常欢愉", three: "年年皆胜意" },
+    { one: "新的一岁，愿你闪闪发光", two: "", three: "万事皆可期待" },
+    { one: "祝你生日快乐", two: "不止今天", three: "而是未来每一天" }
+];
+let currentTitleIndex = 0;
+
+let textone = document.querySelector('.textone').querySelector('h1');
+let texttwo = document.querySelector('.texttwo').querySelector('h1');
+let textthree = document.querySelector('.textthree').querySelector('h1');
+
 document.getElementById('next-btn').addEventListener('click', function() {
-    renderWords();
+    currentTitleIndex = (currentTitleIndex + 1) % titleGroups.length;
+    let group = titleGroups[currentTitleIndex];
+    textone.innerHTML = group.one;
+    texttwo.innerHTML = group.two;
+    textthree.innerHTML = group.three;
+    
+    // 为了每次点击都重新触发粉色淡入效果，重置动画
+    textone.style.animation = 'none';
+    texttwo.style.animation = 'none';
+    textthree.style.animation = 'none';
+    // 触发重绘后重新添加动画
+    setTimeout(() => {
+        textone.style.animation = '';
+        texttwo.style.animation = '';
+        textthree.style.animation = '';
+    }, 50);
 });
 
-// 粉色粒子特效
+// ---------- 4. 粉色粒子特效 ----------
 const canvas = document.getElementById('particles-canvas');
 const ctx = canvas.getContext('2d');
 let width, height, particles = [];
@@ -99,24 +118,7 @@ function drawParticles() {
 window.addEventListener('resize', initParticles);
 initParticles(); drawParticles();
 
-// 主标题切换
-let textone = document.querySelector('.textone').querySelector('h1');
-let texttwo = document.querySelector('.texttwo').querySelector('h1');
-let textthree = document.querySelector('.textthree').querySelector('h1');
-
-setTimeout(() => {
-    textone.innerHTML = '新的一岁，愿你闪闪发光';
-    texttwo.innerHTML = ''; 
-    textthree.innerHTML = '万事皆可期待';
-}, 25000);
-
-setTimeout(() => {
-    textone.innerHTML = '祝你生日快乐';
-    texttwo.innerHTML = '不止今天';
-    textthree.innerHTML = '而是未来每一天';
-}, 80000);
-
-// 音乐播放解锁
+// ---------- 5. 音乐自动播放解锁 ----------
 document.addEventListener('DOMContentLoaded', function() {
     const audio = document.querySelector('audio');
     if (audio) {
