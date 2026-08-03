@@ -50,10 +50,11 @@ body {
 }
 #particles-canvas { z-index: 1; }
 
-/* 公转悬浮词 */
+/* 公转悬浮词（【核心修复】从 z-index:0 提升到 3） */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    overflow: hidden; z-index: 0; pointer-events: none;
+    overflow: hidden; z-index: 3; /* 确保出现在粒子层上方 */
+    pointer-events: none;
 }
 :root { --dist: 20vw; --deg: 0deg; --speed: 10s; --delay: 0s; }
 .word-box {
