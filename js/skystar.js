@@ -13,7 +13,7 @@ function randomNum(min, max) {
     return (Math.random() * (max - min + 1) + min).toFixed(2);
 }
 
-// ---------- 2. 生成固定悬浮词（像最初的分布一样散开，但以中心为锚点） ----------
+// ---------- 2. 生成悬浮词 ----------
 function renderWords() {
     let container = document.querySelector('.container');
     let isMobile = window.innerWidth <= 600;
@@ -26,65 +26,68 @@ function renderWords() {
         let word = document.createElement('div');
         word.innerText = w;
         word.classList.add('word');
-        // 手机端小字体，保证不拥挤
         word.style.fontSize = isMobile ? '12px' : '18px';
 
         word_box.classList.add('word-box');
-
-        // --- 核心：“满天星”散射，绝不重叠 ---
-        // 手机竖屏水平范围小，用 vw 控制，垂直范围大，用 vh
-        let mt = randomNum(-30, 30) + 'vh'; // 上下散开 
-        let ml = randomNum(-25, 25) + 'vw'; // 左右散开
+        let mt = randomNum(-30, 30) + 'vh'; 
+        let ml = randomNum(-25, 25) + 'vw';
         
         word_box.style.setProperty("--margin-top", mt);
         word_box.style.setProperty("--margin-left", ml);
-        
         word_box.style.setProperty("--animation-duration", randomNum(8, 15) + 's');
         word_box.style.setProperty("--animation-delay", randomNum(-3, 0) + 's');
 
         word_box.appendChild(word);
         container.appendChild(word_box);
         index++;
-        // 逐字浮现
         setTimeout(appendWord, 300);
     }
     appendWord();
 }
-
-// 首次加载生成，永不刷新
 window.addEventListener('load', renderWords);
 
-// ---------- 3. 按钮换文字（只换主标题，不碰悬浮词） ----------
-// 准备三组标题文字
+// ---------- 3. 核心：增加5组主标题 - 按键切换 & 自动切换 ----------
+// 设定 5 组精美的生日祝福语
 var titleGroups = [
     { one: "生日快乐", two: "愿你岁岁常欢愉", three: "年年皆胜意" },
-    { one: "新的一岁，愿你闪闪发光", two: "", three: "万事皆可期待" },
-    { one: "祝你生日快乐", two: "不止今天", three: "而是未来每一天" }
+    { one: "新的一岁，愿你闪闪发光", two: "万事皆可期待", three: "" },
+    { one: "祝你生日快乐", two: "不止今天", three: "而是未来每一天" },
+    { one: "愿你三冬暖", two: "愿你春不寒", three: "愿你天黑有灯" },
+    { one: "愿你前程似锦", two: "愿你一生可爱", three: "一生无忧" }
 ];
-let currentTitleIndex = 0;
 
+let currentTitleIndex = 0;
 let textone = document.querySelector('.textone').querySelector('h1');
 let texttwo = document.querySelector('.texttwo').querySelector('h1');
 let textthree = document.querySelector('.textthree').querySelector('h1');
 
-document.getElementById('next-btn').addEventListener('click', function() {
+// 切换主标题的通用函数
+function switchTitle() {
+    // 循环 5 组（0->1->2->3->4->0）
     currentTitleIndex = (currentTitleIndex + 1) % titleGroups.length;
     let group = titleGroups[currentTitleIndex];
     textone.innerHTML = group.one;
     texttwo.innerHTML = group.two;
     textthree.innerHTML = group.three;
     
-    // 为了每次点击都重新触发粉色淡入效果，重置动画
+    // 重置淡入动画，让新文字重新“浮现”出来
     textone.style.animation = 'none';
     texttwo.style.animation = 'none';
     textthree.style.animation = 'none';
-    // 触发重绘后重新添加动画
     setTimeout(() => {
         textone.style.animation = '';
         texttwo.style.animation = '';
         textthree.style.animation = '';
     }, 50);
+}
+
+// 绑定按钮点击事件
+document.getElementById('next-btn').addEventListener('click', function() {
+    switchTitle();
 });
+
+// 自动切换定时器（每 20 秒自动换一组，约 100 秒展示完 5 组）
+setInterval(switchTitle, 20000);
 
 // ---------- 4. 粉色粒子特效 ----------
 const canvas = document.getElementById('particles-canvas');
