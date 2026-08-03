@@ -1,4 +1,4 @@
-// ---------- 1. 生日祝福词汇（保持旋转，不消失） ----------
+// ---------- 1. 生日祝福词汇 ----------
 var words = [
     '生日快乐', '万事胜意', '平安喜乐', '前程似锦', 
     '岁岁常欢愉', '年年皆胜意', '未来可期', '所愿皆成真',
@@ -13,7 +13,7 @@ function randomNum(min, max) {
     return (Math.random() * (max - min + 1) + min).toFixed(2);
 }
 
-// ---------- 2. 生成悬浮词 ----------
+// ---------- 2. 生成悬浮词（拉大手机散射范围，绝不重叠） ----------
 function renderWords() {
     let container = document.querySelector('.container');
     let isMobile = window.innerWidth <= 600;
@@ -26,16 +26,19 @@ function renderWords() {
         let word = document.createElement('div');
         word.innerText = w;
         word.classList.add('word');
-        word.style.fontSize = isMobile ? '12px' : '18px';
+        // 手机字体再小一点，减少拥挤
+        word.style.fontSize = isMobile ? '11px' : '16px';
 
         word_box.classList.add('word-box');
+        
+        // --- 核心修正：手机端拉大散射范围，从 25vw 扩至 35vw ---
         let mt = randomNum(-30, 30) + 'vh'; 
-        let ml = randomNum(-25, 25) + 'vw';
+        let ml = isMobile ? randomNum(-35, 35) + 'vw' : randomNum(-40, 40) + 'vw';
         
         word_box.style.setProperty("--margin-top", mt);
         word_box.style.setProperty("--margin-left", ml);
-        word_box.style.setProperty("--animation-duration", randomNum(8, 15) + 's');
-        word_box.style.setProperty("--animation-delay", randomNum(-3, 0) + 's');
+        word_box.style.setProperty("--anim-speed", randomNum(8, 15) + 's');
+        word_box.style.setProperty("--anim-delay", randomNum(-3, 0) + 's');
 
         word_box.appendChild(word);
         container.appendChild(word_box);
@@ -46,8 +49,7 @@ function renderWords() {
 }
 window.addEventListener('load', renderWords);
 
-// ---------- 3. 核心：增加5组主标题 - 按键切换 & 自动切换 ----------
-// 设定 5 组精美的生日祝福语
+// ---------- 3. 5组主标题安全切换逻辑 ----------
 var titleGroups = [
     { one: "生日快乐", two: "愿你岁岁常欢愉", three: "年年皆胜意" },
     { one: "新的一岁，愿你闪闪发光", two: "万事皆可期待", three: "" },
@@ -61,32 +63,35 @@ let textone = document.querySelector('.textone').querySelector('h1');
 let texttwo = document.querySelector('.texttwo').querySelector('h1');
 let textthree = document.querySelector('.textthree').querySelector('h1');
 
-// 切换主标题的通用函数
 function switchTitle() {
-    // 循环 5 组（0->1->2->3->4->0）
     currentTitleIndex = (currentTitleIndex + 1) % titleGroups.length;
     let group = titleGroups[currentTitleIndex];
-    textone.innerHTML = group.one;
-    texttwo.innerHTML = group.two;
-    textthree.innerHTML = group.three;
     
-    // 重置淡入动画，让新文字重新“浮现”出来
+    // 直接换内容，确保如果 group 有值就显示，无值就显示空
+    textone.innerHTML = group.one || '';
+    texttwo.innerHTML = group.two || '';
+    textthree.innerHTML = group.three || '';
+    
+    // 移除动画，然后再重新添加，强制触发“重新淡入”
     textone.style.animation = 'none';
     texttwo.style.animation = 'none';
     textthree.style.animation = 'none';
-    setTimeout(() => {
-        textone.style.animation = '';
-        texttwo.style.animation = '';
-        textthree.style.animation = '';
-    }, 50);
+    // 强制浏览器重绘
+    textone.offsetHeight; 
+    texttwo.offsetHeight; 
+    textthree.offsetHeight;
+    // 恢复默认动画，使新文字浮现
+    textone.style.animation = '';
+    texttwo.style.animation = '';
+    textthree.style.animation = '';
 }
 
-// 绑定按钮点击事件
+// 按钮点击切换
 document.getElementById('next-btn').addEventListener('click', function() {
     switchTitle();
 });
 
-// 自动切换定时器（每 20 秒自动换一组，约 100 秒展示完 5 组）
+// 自动切换（每20秒自动换一组）
 setInterval(switchTitle, 20000);
 
 // ---------- 4. 粉色粒子特效 ----------
@@ -121,8 +126,12 @@ function drawParticles() {
 window.addEventListener('resize', initParticles);
 initParticles(); drawParticles();
 
-// ---------- 5. 音乐自动播放解锁 ----------
+// ---------- 5. 强制加载视频 + 音乐播放解锁 ----------
 document.addEventListener('DOMContentLoaded', function() {
+    // 强制播放视频（应对某些手机浏览器）
+    const video = document.querySelector('video');
+    if (video) video.play().catch(() => {});
+    
     const audio = document.querySelector('audio');
     if (audio) {
         const unmuteAudio = () => {
