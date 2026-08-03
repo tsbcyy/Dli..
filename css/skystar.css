@@ -1,7 +1,7 @@
 * { margin: 0; padding: 0; }
 body {
     height: 100vh; display: flex; align-items: center; justify-content: center;
-    position: relative; overflow: hidden; perspective: 1300px; background-color: #0b0a1a;
+    position: relative; overflow: hidden; background-color: #0b0a1a;
 }
 #videofilm {
     width: 100%; height: 100%; object-fit: cover;
@@ -12,67 +12,78 @@ body {
     z-index: 0; pointer-events: none;
 }
 
-/* --- 主标题绝对居中 --- */
+/* --- 小米手机极限强制居中（修复偏移） --- */
 .textone, .texttwo, .textthree {
     position: absolute; 
-    left: 50%; transform: translateX(-50%);
-    text-align: center; z-index: 3;
+    width: 100%; 
+    left: 0; /* 强制从最左侧开始 */
+    text-align: center; 
+    z-index: 3;
+    /* 使用 Flex 确保内部 h1 死死固定在水平正中心 */
+    display: flex; justify-content: center;
 }
-.textone { top: 30%; } .texttwo { top: 45%; } .textthree { top: 60%; }
+.textone { top: 28%; } .texttwo { top: 45%; } .textthree { top: 62%; }
 @media (max-width: 600px) {
     .textone { top: 25%; } .texttwo { top: 45%; } .textthree { top: 65%; }
 }
 
 h1 {
     display: inline-block;
-    font-size: clamp(16px, 4vw, 30px);
+    /* 小米手机上缩小字号，防止文字过长遮挡 */
+    font-size: clamp(14px, 3.5vw, 28px);
     font-family: '楷体', 'KaiTi', serif;
     color: #FFB7C5;
     text-shadow: 0 0 20px rgba(255, 105, 180, 0.6);
     animation: fadeInTitle 1.5s forwards;
     animation-delay: 0.2s;
     opacity: 0;
+    /* 小米窄屏允许自动换行 */
+    white-space: normal; 
 }
-@media (max-width: 600px) { h1 { white-space: normal; } }
-
 @keyframes fadeInTitle {
-    from { opacity: 0; transform: translateY(10px) scale(0.8); }
+    from { opacity: 0; transform: translateY(8px) scale(0.8); }
     to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* --- 悬浮祝福词：位置与旋转彻底分离 --- */
+/* --- 公转动画（绕屏幕中心旋转） --- */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     overflow: hidden; z-index: 1; pointer-events: none;
 }
-:root { --margin-top: 0; --margin-left: 0; --anim-speed: 0s; --anim-delay: 0s; }
+:root { 
+    --dist: 20vw;      /* 公转半径 */
+    --init-deg: 0deg;  /* 初始角度 */
+    --speed: 10s;      /* 转动速度 */
+    --delay: 0s;       /* 延迟 */
+}
 
 .word-box {
     position: absolute;
-    top: 50%; left: 50%;
-    /* 定位核心：用 margin 将中心点分散出去 */
+    top: 50%; left: 50%; /* 锚点定在屏幕正中心 */
+    transform: translate(-50%, -50%);
+    /* 使用 margin 进行小范围上下浮动，让轨道错落有致，避免一圈重叠 */
     margin-top: var(--margin-top);
     margin-left: var(--margin-left);
-    /* 用 transform 将基准点拉回中心，形成从中心散射的效果 */
-    transform: translate(-50%, -50%);
-    animation: fadeInWord 0.8s forwards;
-    animation-delay: var(--anim-delay);
+    /* 核心：绕中心公转的动画 */
+    animation: orbit var(--speed) linear infinite;
+    animation-delay: var(--delay);
     opacity: 0;
 }
 .word-box .word {
-    display: inline-block;
-    /* 旋转独立放在子元素上，完全不管位置，只负责原地绕 Y 轴转 */
-    animation: rotY var(--anim-speed) linear infinite;
+    position: absolute;
     color: #BAABDA; font-family: '楷体';
+    /* 逐步浮现动画 */
+    animation: fadeInWord 0.8s forwards;
+    animation-delay: var(--delay);
 }
 
-@keyframes rotY {
-    from { transform: rotateY(0deg); }
-    to { transform: rotateY(360deg); }
+@keyframes orbit {
+    0% { transform: translate(-50%, -50%) rotate(0deg) translateX(var(--dist)) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) rotate(360deg) translateX(var(--dist)) rotate(-360deg); }
 }
 @keyframes fadeInWord {
-    from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 /* --- 按钮 --- */
