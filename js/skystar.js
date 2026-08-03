@@ -12,7 +12,7 @@ const titleGroups = [
     { text: "祝你生日快乐\n未来可期\n不负心中热爱" }
 ];
 
-// ---------- 2. 公转祝福语（28句） ----------
+// ---------- 2. 公转祝福语 ----------
 var orbitWords = [
     '生日快乐', '万事胜意', '平安喜乐', '前程似锦', '岁岁常欢愉',
     '年年皆胜意', '未来可期', '所愿皆成真', '多喜乐，长安宁',
@@ -34,26 +34,33 @@ const particleCanvas = document.getElementById('particles-canvas');
 const particleCtx = particleCanvas.getContext('2d');
 const video = document.getElementById('videofilm');
 const bgMusic = document.getElementById('bg-music');
-const btn = document.getElementById('next-btn');
 const container = document.querySelector('.container');
-const overlay = document.getElementById('loading-overlay');
 const staticBg = document.getElementById('static-bg');
 const endingOverlay = document.getElementById('ending-overlay');
+const entryScreen = document.getElementById('entry-screen');
+const mainScreen = document.getElementById('main-screen');
+const startBtn = document.getElementById('start-btn');
+const loadingStatus = document.getElementById('loading-status');
+const userNameInput = document.getElementById('user-name');
+const userMonthInput = document.getElementById('user-month');
+const endingDynamic = document.getElementById('ending-dynamic');
 
 let W, H, particles = [], bgParticles = [];
-let clickCount = 0;
 let switchCount = 0;
 let isEndingShown = false;
-const isMobile = window.innerWidth <= 600;
+let autoTimer;
 
-// ---------- 4. 适配尺寸 ----------
+const isMobile = window.innerWidth <= 600;
+const loadManager = { videoReady: false, audioReady: false, wordsReady: false };
+
+// ---------- 4. 尺寸适配 ----------
 function resizeCanvas() {
     W = textCanvas.width = particleCanvas.width = window.innerWidth;
     H = textCanvas.height = particleCanvas.height = window.innerHeight;
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ---------- 5. 极致粒子提取（保留 step = 1） ----------
+// ---------- 5. 极致提取 (step=1) ----------
 function getTextPoints(text) {
     const fontSize = Math.min(W * 0.08, 40);
     const lineHeight = fontSize * 1.3;
@@ -64,33 +71,27 @@ function getTextPoints(text) {
     offCtx.fillStyle = '#fff';
     offCtx.font = `${fontSize}px '楷体', 'KaiTi', serif`;
     offCtx.textAlign = 'center'; offCtx.textBaseline = 'middle';
-
     const startY = (offCanvas.height - lines.length * lineHeight) / 2 + lineHeight / 2;
     lines.forEach((line, index) => offCtx.fillText(line, offCanvas.width / 2, startY + index * lineHeight));
 
     const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
     const data = imageData.data;
     const points = [];
-    const step = 1; // 绝对保留 step=1 的极致细化
+    const step = 1; 
     for (let y = 0; y < offCanvas.height; y += step) {
         for (let x = 0; x < offCanvas.width; x += step) {
             const idx = (y * offCanvas.width + x) * 4;
-            if (data[idx + 3] > 128) {
-                points.push({ tx: (x / offCanvas.width) * W, ty: (y / offCanvas.height) * H });
-            }
+            if (data[idx + 3] > 128) points.push({ tx: (x / offCanvas.width) * W, ty: (y / offCanvas.height) * H });
         }
     }
     return points;
 }
 
-// ---------- 6. 生成主标题粒子 ----------
+// ---------- 6. 生成粒子 ----------
 function generateParticles(text) {
     const newPoints = getTextPoints(text);
     while (particles.length < newPoints.length) {
-        particles.push({
-            x: Math.random() * W, y: Math.random() * H, tx: 0, ty: 0,
-            color: `hsla(${330 + Math.random() * 30}, 80%, ${65 + Math.random() * 25}%, 0.9)`
-        });
+        particles.push({ x: Math.random() * W, y: Math.random() * H, tx: 0, ty: 0, color: `hsla(${330 + Math.random() * 30}, 80%, ${65 + Math.random() * 25}%, 0.9)` });
     }
     particles.splice(newPoints.length);
     particles.forEach((p, i) => {
@@ -99,30 +100,26 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环（粒子调小一号） ----------
+// ---------- 7. 动画循环（减小一号：手机2.2px, 电脑3.5px） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
-    // 【核心修改】粒子尺寸调小一号：
-    // 之前手机 4.0px，电脑 5.5px；现在手机 3.0px，电脑 4.5px
-    const radius = isMobile ? 3.0 : 4.5; 
+    const radius = isMobile ? 2.2 : 3.5; // ★ 比之前再小一号
     particles.forEach(p => {
         const dx = p.tx - p.x, dy = p.ty - p.y;
-        if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
-            p.x += dx * 0.08; p.y += dy * 0.08;
-        } else { p.x = p.tx; p.y = p.ty; }
+        if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) { p.x += dx * 0.08; p.y += dy * 0.08; } 
+        else { p.x = p.tx; p.y = p.ty; }
         textCtx.beginPath(); textCtx.arc(p.x, p.y, radius, 0, Math.PI * 2);
         textCtx.fillStyle = p.color; textCtx.fill();
     });
     requestAnimationFrame(animateText);
 }
 
-// ---------- 8. 背景小粒子 ----------
+// ---------- 8. 背景粒子 ----------
 function initBgParticles() {
     bgParticles = [];
     for (let i = 0; i < 50; i++) {
         bgParticles.push({
-            x: Math.random() * W, y: Math.random() * H,
-            vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+            x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
             r: Math.random() * 2 + 1, color: `hsla(340, 80%, 70%, ${Math.random() * 0.4 + 0.2})`
         });
     }
@@ -139,155 +136,133 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 9. 预加载悬浮祝福语（隐藏状态建好） ----------
+// ---------- 9. 预加载悬浮词 ----------
 function preloadOrbitWords() {
     container.innerHTML = '';
     let index = 0;
     function appendWord() {
         if (index >= orbitWords.length) {
-            // 悬浮词全部生成完毕，通知加载管理器
-            loadManager.wordsReady = true;
-            checkAllLoaded();
-            return;
+            loadManager.wordsReady = true; checkAllLoaded(); return;
         }
         let w = orbitWords[index];
         let word_box = document.createElement('div');
         let word = document.createElement('div');
-        word.innerText = w; 
-        word.classList.add('word');
-        word.style.fontSize = isMobile ? '12px' : '18px'; 
-        word.style.color = '#FFB7C5';
+        word.innerText = w; word.classList.add('word');
+        word.style.fontSize = isMobile ? '12px' : '18px'; word.style.color = '#FFB7C5';
         word_box.classList.add('word-box');
-        
-        let dist = randomNum(12, 28) + 'vw'; 
-        let deg = (index * 15) + 'deg'; 
-        let speed = randomNum(18, 28) + 's'; 
-        let delay = (0.2 + index * 0.15) + 's'; 
-        
-        word_box.style.setProperty("--dist", dist); 
-        word_box.style.setProperty("--deg", deg);
-        word_box.style.setProperty("--speed", speed); 
-        word_box.style.setProperty("--delay", delay);
-        
-        word_box.appendChild(word); 
-        container.appendChild(word_box);
-        index++;
-        setTimeout(appendWord, 300);
+        let dist = randomNum(12, 28) + 'vw'; let deg = (index * 15) + 'deg';
+        let speed = randomNum(18, 28) + 's'; let delay = (0.2 + index * 0.15) + 's';
+        word_box.style.setProperty("--dist", dist); word_box.style.setProperty("--deg", deg);
+        word_box.style.setProperty("--speed", speed); word_box.style.setProperty("--delay", delay);
+        word_box.appendChild(word); container.appendChild(word_box);
+        index++; setTimeout(appendWord, 300);
     }
     appendWord();
 }
 
-// ---------- 10. 切换与完结逻辑 ----------
-function triggerSwitch() {
-    if (isEndingShown) return;
-    if (switchCount < titleGroups.length - 1) {
-        switchCount++;
-        generateParticles(titleGroups[switchCount].text);
-    } else {
-        showEnding();
-    }
-}
-function showEnding() {
-    if (isEndingShown) return;
-    isEndingShown = true;
-    endingOverlay.classList.add('show');
-    btn.style.display = 'none';
-    clearInterval(autoTimer);
-}
-
-// ---------- 11. 按钮交互 ----------
-btn.addEventListener('click', function() {
-    if (isEndingShown) return;
-    if (bgMusic.muted) bgMusic.muted = false;
-
-    clickCount++;
-    triggerSwitch();
-
-    // 第4次点击触发大招
-    if (clickCount >= 3) { 
-        video.style.display = 'block';
-        video.muted = false;
-        video.play().then(() => {
-            staticBg.style.display = 'none';
-        }).catch(() => {
-            video.style.display = 'none';
-            staticBg.style.display = 'block';
-        });
-        // 释放悬浮祝福语
-        container.style.display = 'block'; 
-    }
-});
-
-// ---------- 12. 【核心修改】强制完全加载进度管理器 ----------
-// 定义加载状态
-const loadManager = {
-    videoReady: false,
-    audioReady: false,
-    wordsReady: false
-};
-
-let autoTimer;
-
-// 检查是否所有资源都已加载完毕
+// ---------- 10. 核心加载完成检查 ----------
 function checkAllLoaded() {
     if (loadManager.videoReady && loadManager.audioReady && loadManager.wordsReady) {
-        // 全部加载完毕，关闭加载页，显示按钮！
-        overlay.classList.add('fade-out');
-        setTimeout(() => { 
-            overlay.style.display = 'none'; 
-            btn.style.display = 'block'; 
-        }, 800);
-
-        // 开始20秒自动切换
-        autoTimer = setInterval(() => {
-            if (!isEndingShown) triggerSwitch();
-        }, 20000);
+        loadManager.isAllReady = true;
     }
 }
 
-// 初始化加载流程
-function initLoad() {
-    // 1. 渲染粒子（立即执行）
-    initBgParticles();
-    generateParticles(titleGroups[0].text);
-    // 2. 预构建悬浮祝福语（会触发 wordsReady = true）
-    preloadOrbitWords();
-
-    // 3. 监听视频加载完毕（`canplaythrough` 表示已缓冲完整，可流畅播放）
-    video.addEventListener('canplaythrough', function() {
-        loadManager.videoReady = true;
-        checkAllLoaded();
-    });
-    // 视频加载失败或卡死时的保底（10秒后强制释放）
-    setTimeout(() => {
-        if (!loadManager.videoReady) {
-            console.warn('视频加载超时，强制释放');
-            loadManager.videoReady = true;
-            checkAllLoaded();
-        }
-    }, 10000);
-
-    // 4. 监听音频加载完毕
-    bgMusic.addEventListener('canplaythrough', function() {
-        loadManager.audioReady = true;
-        checkAllLoaded();
-    });
-    // 音频加载保底（8秒）
-    setTimeout(() => {
-        if (!loadManager.audioReady) {
-            loadManager.audioReady = true;
-            checkAllLoaded();
-        }
-    }, 8000);
-
-    // 5. 静默唤起预加载（不打断正常等待）
-    video.muted = true; video.load();
-    video.play().then(() => video.pause()).catch(()=>{});
-    bgMusic.muted = true; bgMusic.load();
-    bgMusic.play().catch(()=>{});
+// ---------- 11. 大结局触发 ----------
+function showEnding(name, month) {
+    if (isEndingShown) return;
+    isEndingShown = true;
+    endingDynamic.innerHTML = `${name}，愿你${month}月生日的这一天<br>永远被爱包围，岁岁年年`;
+    endingOverlay.classList.add('show');
+    clearInterval(autoTimer);
+    // 淡出所有元素视效（可选）
 }
 
-// ---------- 13. 启动 ----------
+// ---------- 12. 点击“开始”触发主流程 ----------
+startBtn.addEventListener('click', function() {
+    const name = userNameInput.value.trim() || '亲爱的';
+    const month = userMonthInput.value.trim() || '每一';
+
+    if (!userNameInput.value.trim()) {
+        userNameInput.style.borderColor = '#FF7EB3';
+        setTimeout(() => userNameInput.style.borderColor = '', 1500);
+        return;
+    }
+
+    // 显示等待状态
+    startBtn.style.display = 'none';
+    loadingStatus.style.display = 'flex';
+
+    // 等待完全加载
+    const waitForLoad = setInterval(() => {
+        if (loadManager.isAllReady) {
+            clearInterval(waitForLoad);
+            startMain(name, month);
+        }
+    }, 300);
+
+    // 15秒保底（极端网络情况也要放行，防止卡死）
+    setTimeout(() => {
+        if (!loadManager.isAllReady) {
+            clearInterval(waitForLoad);
+            loadManager.isAllReady = true;
+            startMain(name, month);
+        }
+    }, 15000);
+});
+
+// ---------- 13. 正式主流程（不需要按钮了） ----------
+function startMain(name, month) {
+    // 1. 隐藏输入页面，展现主界面
+    entryScreen.style.display = 'none';
+    mainScreen.style.display = 'block';
+    
+    // 2. 主界面必备渲染
+    initBgParticles();
+    generateParticles(titleGroups[0].text);
+    animateText();
+    const endText = `${name}，${month}月生日快乐！`;
+
+    // 3. 10秒自动切换
+    let index = 0;
+    autoTimer = setInterval(() => {
+        index++;
+        if (index < titleGroups.length) {
+            generateParticles(titleGroups[index].text);
+        } else {
+            showEnding(name, month);
+            return;
+        }
+
+        // 播放三个后（即到了第4个周期时，index === 3）放音乐和视频与悬浮词
+        if (index === 3) {
+            // 触发音乐+视频+悬浮
+            video.style.display = 'block';
+            video.muted = false;
+            video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
+            
+            bgMusic.muted = false;
+            bgMusic.play().catch(()=>{});
+
+            container.style.display = 'block'; // 释放悬浮词
+        }
+    }, 10000); // 10秒触发一次
+}
+
+// ---------- 14. 页面启动，后台立刻预加载 ----------
+function preloadAll() {
+    video.muted = true; video.load();
+    video.play().then(() => video.pause()).catch(()=>{});
+    video.addEventListener('canplaythrough', () => { loadManager.videoReady = true; checkAllLoaded(); });
+    setTimeout(() => { if(!loadManager.videoReady) { loadManager.videoReady = true; checkAllLoaded(); } }, 10000);
+
+    bgMusic.muted = true; bgMusic.load();
+    bgMusic.play().catch(()=>{});
+    bgMusic.addEventListener('canplaythrough', () => { loadManager.audioReady = true; checkAllLoaded(); });
+    setTimeout(() => { if(!loadManager.audioReady) { loadManager.audioReady = true; checkAllLoaded(); } }, 8000);
+
+    preloadOrbitWords(); // 内部会触发 wordsReady
+}
+
+// ---------- 15. 启动 ----------
 resizeCanvas();
-animateText();
-initLoad();
+preloadAll();
