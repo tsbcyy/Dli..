@@ -1,4 +1,4 @@
-// ---------- 1. 悬浮词 ----------
+// ---------- 1. 悬浮祝福语 ----------
 var words = [
     '生日快乐', '万事胜意', '平安喜乐', '前程似锦', 
     '岁岁常欢愉', '年年皆胜意', '未来可期', '所愿皆成真',
@@ -23,11 +23,9 @@ const titleGroups = [
     { text: "祝你生日快乐\n未来可期\n不负心中热爱" }
 ];
 
-function randomNum(min, max) {
-    return (Math.random() * (max - min + 1) + min).toFixed(2);
-}
+function randomNum(min, max) { return (Math.random() * (max - min + 1) + min).toFixed(2); }
 
-// ---------- 3. DOM ----------
+// ---------- 3. DOM 元素 ----------
 const textCanvas = document.getElementById('text-canvas');
 const textCtx = textCanvas.getContext('2d');
 const particleCanvas = document.getElementById('particles-canvas');
@@ -46,15 +44,11 @@ const userMonthInput = document.getElementById('user-month');
 const endingDynamic = document.getElementById('ending-dynamic');
 
 let W, H, particles = [], bgParticles = [];
-let switchCount = 0;
-let isEndingShown = false;
-let autoTimer;
-
+let switchCount = 0, isEndingShown = false, autoTimer, videoBlobUrl = null;
 const isMobile = window.innerWidth <= 600;
 const loadManager = { videoReady: false, audioReady: false, wordsReady: false, isAllReady: false };
-let videoBlobUrl = null;
 
-// ---------- 4. 尺寸 ----------
+// ---------- 4. 尺寸适配 ----------
 function resizeCanvas() {
     W = textCanvas.width = particleCanvas.width = window.innerWidth;
     H = textCanvas.height = particleCanvas.height = window.innerHeight;
@@ -88,7 +82,7 @@ function getTextPoints(text) {
     return points;
 }
 
-// ---------- 6. 生成粒子 ----------
+// ---------- 6. 生成主标题 ----------
 function generateParticles(text) {
     const newPoints = getTextPoints(text);
     while (particles.length < newPoints.length) {
@@ -101,7 +95,7 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环 ----------
+// ---------- 7. 动画循环 (手机2.2px) ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
     const radius = isMobile ? 2.2 : 3.5; 
@@ -137,26 +131,26 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 9. 预加载悬浮词 (结合新CSS，均匀散开) ----------
+// ---------- 9. 预加载悬浮词（公转逻辑） ----------
 function preloadRandomWords() {
     container.innerHTML = '';
     let f = document.createDocumentFragment();
-    words.forEach(w => {
+    words.forEach((w, index) => {
         let word_box = document.createElement('div');
         let word = document.createElement('div');
-        word.innerText = w;
-        word.classList.add('word');
+        word.innerText = w; word.classList.add('word');
+        word.style.fontSize = isMobile ? '14px' : '18px'; 
         word.style.color = '#BAABDA';
-        word.style.fontFamily = '楷体';
-        word.style.fontSize = isMobile ? '14px' : '20px';
         word_box.classList.add('word-box');
-        
-        // 以大屏幕正中心为圆心，上下左右均匀散开（绝不重叠）
-        word_box.style.setProperty("--margin-top", randomNum(-35, 35) + 'vh');
-        word_box.style.setProperty("--margin-left", randomNum(-40, 40) + 'vw');
-        word_box.style.setProperty("--animation-duration", randomNum(8, 20) + 's');
-        word_box.style.setProperty("--animation-delay", randomNum(-15, 0) + 's');
-        
+        // 公转半径和角度（错落有致）
+        let dist = randomNum(15, 35) + 'vw'; 
+        let deg = (index * 15) + 'deg'; 
+        let speed = randomNum(15, 25) + 's'; 
+        let delay = (0.2 + index * 0.15) + 's'; 
+        word_box.style.setProperty("--dist", dist);
+        word_box.style.setProperty("--deg", deg);
+        word_box.style.setProperty("--speed", speed);
+        word_box.style.setProperty("--delay", delay);
         word_box.appendChild(word);
         f.appendChild(word_box);
     });
@@ -165,7 +159,7 @@ function preloadRandomWords() {
     checkAllLoaded();
 }
 
-// ---------- 10. XHR 缓存视频 ----------
+// ---------- 10. 【核心】一打开页面就开始 XHR 缓存 ----------
 function preloadVideoXHR() {
     if (videoBlobUrl) return;
     const xhr = new XMLHttpRequest();
@@ -173,33 +167,28 @@ function preloadVideoXHR() {
     xhr.responseType = 'blob';
     xhr.onload = function() {
         if (this.status === 200) {
-            const blob = this.response;
-            videoBlobUrl = URL.createObjectURL(blob);
+            videoBlobUrl = URL.createObjectURL(this.response);
             video.src = videoBlobUrl;
             loadManager.videoReady = true;
             checkAllLoaded();
         } else {
-            setTimeout(() => { if(!loadManager.videoReady) { loadManager.videoReady = true; checkAllLoaded(); } }, 5000);
+            setTimeout(() => { if(!loadManager.videoReady) { loadManager.videoReady = true; checkAllLoaded(); } }, 3000);
         }
     };
     xhr.onerror = function() {
-        setTimeout(() => { if(!loadManager.videoReady) { loadManager.videoReady = true; checkAllLoaded(); } }, 5000);
+        setTimeout(() => { if(!loadManager.videoReady) { loadManager.videoReady = true; checkAllLoaded(); } }, 3000);
     };
     xhr.send();
 }
-userNameInput.addEventListener('input', preloadVideoXHR);
-userMonthInput.addEventListener('input', preloadVideoXHR);
-userNameInput.addEventListener('focus', preloadVideoXHR);
-userMonthInput.addEventListener('focus', preloadVideoXHR);
 
-// ---------- 11. 检查加载完成 ----------
+// ---------- 11. 加载完成检查 ----------
 function checkAllLoaded() {
     if (loadManager.videoReady && loadManager.audioReady && loadManager.wordsReady) {
         loadManager.isAllReady = true;
     }
 }
 
-// ---------- 12. 完结 ----------
+// ---------- 12. 大结局 ----------
 function showEnding(name, month) {
     if (isEndingShown) return;
     isEndingShown = true;
@@ -212,13 +201,11 @@ function showEnding(name, month) {
 startBtn.addEventListener('click', function() {
     const name = userNameInput.value.trim() || '亲爱的';
     const month = userMonthInput.value.trim() || '每一';
-
     if (!userNameInput.value.trim()) {
         userNameInput.style.borderColor = '#FF7EB3';
         setTimeout(() => userNameInput.style.borderColor = '', 1500);
         return;
     }
-
     startBtn.style.display = 'none';
     loadingStatus.style.display = 'flex';
 
@@ -228,7 +215,6 @@ startBtn.addEventListener('click', function() {
             startMain(name, month);
         }
     }, 300);
-
     setTimeout(() => {
         if (!loadManager.isAllReady) {
             clearInterval(waitForLoad);
@@ -238,7 +224,7 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 14. 主流程 (5秒切换) ----------
+// ---------- 14. 主流程（音乐一进主界面就响） ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
@@ -247,9 +233,11 @@ function startMain(name, month) {
     generateParticles(titleGroups[0].text);
     animateText();
 
+    // 手势唤醒视频（不播放，只预激活）
     video.muted = true;
     video.play().then(() => video.pause()).catch(()=>{});
     
+    // 【核心】音乐从一开始主界面出现就立刻响起！
     bgMusic.muted = false;
     bgMusic.play().catch(()=>{});
 
@@ -263,25 +251,32 @@ function startMain(name, month) {
             return;
         }
 
+        // 第4句话（index===3）时，触发视频+悬浮词
         if (index === 3) {
             video.style.display = 'block';
             video.muted = false;
             video.loop = true;
             video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
-            container.style.display = 'block'; // 释放悬浮祝福语
+            container.style.display = 'block'; // 释放悬浮词
         }
-    }, 5000); // 5秒间隔
+    }, 5000); // 5秒切换
 }
 
-// ---------- 15. 启动加载 ----------
+// ---------- 15. 页面启动（立即缓存所有资源） ----------
 function preloadAll() {
+    // 1. 立即可始 XHR 下载视频
+    preloadVideoXHR();
+    
+    // 2. 静音预加载音频
     bgMusic.muted = true; 
     bgMusic.play().catch(()=>{});
     bgMusic.addEventListener('canplaythrough', () => { loadManager.audioReady = true; checkAllLoaded(); });
     setTimeout(() => { if(!loadManager.audioReady) { loadManager.audioReady = true; checkAllLoaded(); } }, 8000);
 
+    // 3. 预生成悬浮祝福语
     preloadRandomWords();
 }
 
+// ---------- 16. 启动 ----------
 resizeCanvas();
 preloadAll();
