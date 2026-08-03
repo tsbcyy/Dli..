@@ -187,6 +187,7 @@ startBtn.addEventListener('click', function() {
         return;
     }
 
+    // 保持输入页的加载条显示
     startBtn.style.display = 'none';
     loadingStatus.style.display = 'flex';
 
@@ -219,15 +220,13 @@ function startMain(name, month) {
     generateParticles(titleGroups[0].text);
     animateText();
 
-    // 3. 【核心修复】向浏览器“注册”用户手势权限
-    // 静音启动视频并立即暂停，这样后续再播就不会被拦截
+    // 3. 向浏览器“注册”用户手势权限
     video.muted = true;
     video.play().then(() => video.pause()).catch(()=>{});
-    // 同时也让音频先静音挂起
     bgMusic.muted = true;
     bgMusic.play().catch(()=>{});
 
-    // 4. 【改为 8 秒】自动切换
+    // 4. 8秒自动切换
     let index = 0;
     autoTimer = setInterval(() => {
         index++;
@@ -243,7 +242,7 @@ function startMain(name, month) {
             // 触发音乐+视频+悬浮
             video.style.display = 'block';
             video.muted = false;
-            // 此时已经通过手势激活，这里可以正常播放！
+            video.loop = true; // 【核心修复】强制开启循环播放
             video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
             
             bgMusic.muted = false;
@@ -251,7 +250,7 @@ function startMain(name, month) {
 
             container.style.display = 'block'; // 释放悬浮词
         }
-    }, 8000); // 【修改】改为 8000 毫秒（8秒）
+    }, 8000); // 8秒间隔
 }
 
 // ---------- 14. 页面启动，后台立刻预加载 ----------
