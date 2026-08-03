@@ -1,4 +1,4 @@
-// ---------- 1. 【悬浮祝福语】改用生日祝福词（去掉您提供的古诗词） ----------
+// ---------- 1. 悬浮词：生日祝福语列表 ----------
 var words = [
     '生日快乐', '万事胜意', '平安喜乐', '前程似锦', 
     '岁岁常欢愉', '年年皆胜意', '未来可期', '所愿皆成真',
@@ -53,8 +53,8 @@ let isEndingShown = false;
 let autoTimer;
 
 const isMobile = window.innerWidth <= 600;
-// 加载管理器：必须全部就绪才能释放
 const loadManager = { videoReady: false, audioReady: false, wordsReady: false, isAllReady: false };
+let videoBlobUrl = null; // 缓存视频二进制对象
 
 // ---------- 5. 尺寸适配 ----------
 function resizeCanvas() {
@@ -63,7 +63,7 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ---------- 6. 极致粒子提取 (step=1) ----------
+// ---------- 6. 粒子提取 (step=1 极致细) ----------
 function getTextPoints(text) {
     const fontSize = Math.min(W * 0.08, 40);
     const lineHeight = fontSize * 1.3;
@@ -90,7 +90,7 @@ function getTextPoints(text) {
     return points;
 }
 
-// ---------- 7. 生成粒子 ----------
+// ---------- 7. 生成主标题粒子 ----------
 function generateParticles(text) {
     const newPoints = getTextPoints(text);
     while (particles.length < newPoints.length) {
@@ -139,7 +139,7 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 10. 预加载悬浮祝福语（此时 words 数组已经是生日祝福语了） ----------
+// ---------- 10. 预加载悬浮祝福语 ----------
 function preloadRandomWords() {
     container.innerHTML = '';
     let f = document.createDocumentFragment();
@@ -153,10 +153,11 @@ function preloadRandomWords() {
         word.style.fontSize = isMobile ? '14px' : '20px';
         word_box.classList.add('word-box');
         
-        word_box.style.setProperty("--margin-top", randomNum(-30, 30) + 'vh');
-        word_box.style.setProperty("--margin-left", randomNum(-35, 35) + 'vw');
+        // 拉大随机范围，且以中心为锚点，避免重叠
+        word_box.style.setProperty("--margin-top", randomNum(-35, 35) + 'vh');
+        word_box.style.setProperty("--margin-left", randomNum(-40, 40) + 'vw');
         word_box.style.setProperty("--animation-duration", randomNum(8, 20) + 's');
-        word_box.style.setProperty("--animation-delay", randomNum(-20, 0) + 's');
+        word_box.style.setProperty("--animation-delay", randomNum(-15, 0) + 's');
         
         word_box.appendChild(word);
         f.appendChild(word_box);
@@ -166,14 +167,59 @@ function preloadRandomWords() {
     checkAllLoaded();
 }
 
-// ---------- 11. 加载完成检查 ----------
+// ---------- 11. 【核心解决】XHR 终极视频预下载（解决 QQ 浏览器卡顿） ----------
+function preloadVideoXHR() {
+    if (videoBlobUrl) return; // 已下载完成
+    // 注意：确保路径与 HTML 中的一致
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', 'video/skystar.mp4', true);
+    xhr.responseType = 'blob';
+    xhr.onprogress = function(e) {
+        // 可选：您可以在输入页加一个百分比进度条（暂不实现，保持简洁）
+    };
+    xhr.onload = function() {
+        if (this.status === 200) {
+            const blob = this.response;
+            videoBlobUrl = URL.createObjectURL(blob);
+            video.src = videoBlobUrl;
+            loadManager.videoReady = true;
+            checkAllLoaded();
+        } else {
+            // 如果 XHR 失败，回退到普通加载方式
+            setTimeout(() => { 
+                if(!loadManager.videoReady) { 
+                    loadManager.videoReady = true; 
+                    checkAllLoaded(); 
+                }
+            }, 5000);
+        }
+    };
+    xhr.onerror = function() {
+        // 网络错误，走保底
+        setTimeout(() => { 
+            if(!loadManager.videoReady) { 
+                loadManager.videoReady = true; 
+                checkAllLoaded(); 
+            }
+        }, 5000);
+    };
+    xhr.send();
+}
+
+// ---------- 12. 触发预下载 ----------
+userNameInput.addEventListener('input', preloadVideoXHR);
+userMonthInput.addEventListener('input', preloadVideoXHR);
+userNameInput.addEventListener('focus', preloadVideoXHR);
+userMonthInput.addEventListener('focus', preloadVideoXHR);
+
+// ---------- 13. 加载完成检查 ----------
 function checkAllLoaded() {
     if (loadManager.videoReady && loadManager.audioReady && loadManager.wordsReady) {
         loadManager.isAllReady = true;
     }
 }
 
-// ---------- 12. 大结局 ----------
+// ---------- 14. 大结局 ----------
 function showEnding(name, month) {
     if (isEndingShown) return;
     isEndingShown = true;
@@ -182,7 +228,7 @@ function showEnding(name, month) {
     clearInterval(autoTimer);
 }
 
-// ---------- 13. 主流程触发 ----------
+// ---------- 15. 主流程触发 ----------
 startBtn.addEventListener('click', function() {
     const name = userNameInput.value.trim() || '亲爱的';
     const month = userMonthInput.value.trim() || '每一';
@@ -196,6 +242,7 @@ startBtn.addEventListener('click', function() {
     startBtn.style.display = 'none';
     loadingStatus.style.display = 'flex';
 
+    // 严格等待视频100%下载完毕
     const waitForLoad = setInterval(() => {
         if (loadManager.isAllReady) {
             clearInterval(waitForLoad);
@@ -203,16 +250,17 @@ startBtn.addEventListener('click', function() {
         }
     }, 300);
 
+    // 极限保底
     setTimeout(() => {
         if (!loadManager.isAllReady) {
             clearInterval(waitForLoad);
             loadManager.isAllReady = true;
             startMain(name, month);
         }
-    }, 15000);
+    }, 30000); // QQ 浏览器极限容错 30 秒
 });
 
-// ---------- 14. 正式主界面 ----------
+// ---------- 16. 正式主界面（改为5秒） ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
@@ -223,7 +271,9 @@ function startMain(name, month) {
 
     video.muted = true;
     video.play().then(() => video.pause()).catch(()=>{});
-    bgMusic.muted = true;
+    
+    // 音乐自动播放（一进主界面自动取消静音）
+    bgMusic.muted = false;
     bgMusic.play().catch(()=>{});
 
     let index = 0;
@@ -241,30 +291,26 @@ function startMain(name, month) {
             video.muted = false;
             video.loop = true;
             video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
-            
-            bgMusic.muted = false;
-            bgMusic.play().catch(()=>{});
-
-            container.style.display = 'block'; // 释放悬浮词
+            container.style.display = 'block'; // 释放悬浮祝福语
         }
-    }, 8000);
+    }, 5000); // 【核心修改】改为 5000 毫秒（5秒）
 }
 
-// ---------- 15. 页面启动预加载 ----------
+// ---------- 17. 页面启动（一打开就自动静音播放音乐） ----------
 function preloadAll() {
-    video.muted = true; video.load();
-    video.play().then(() => video.pause()).catch(()=>{});
-    video.addEventListener('canplaythrough', () => { loadManager.videoReady = true; checkAllLoaded(); });
-    setTimeout(() => { if(!loadManager.videoReady) { loadManager.videoReady = true; checkAllLoaded(); } }, 10000);
-
-    bgMusic.muted = true; bgMusic.load();
+    // 音乐从最开始就自动静音播放（用户一进来就激活了音乐通道）
+    bgMusic.muted = true; 
     bgMusic.play().catch(()=>{});
-    bgMusic.addEventListener('canplaythrough', () => { loadManager.audioReady = true; checkAllLoaded(); });
+    bgMusic.addEventListener('canplaythrough', () => { 
+        loadManager.audioReady = true; 
+        checkAllLoaded(); 
+    });
     setTimeout(() => { if(!loadManager.audioReady) { loadManager.audioReady = true; checkAllLoaded(); } }, 8000);
 
-    preloadRandomWords(); // 这里生成的是生日祝福语
+    // 预生成悬浮祝福语
+    preloadRandomWords();
 }
 
-// ---------- 16. 启动 ----------
+// ---------- 18. 启动 ----------
 resizeCanvas();
 preloadAll();
