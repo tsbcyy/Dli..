@@ -1,4 +1,4 @@
-// ---------- 1. 扩充至 10 组主标题 ----------
+// ---------- 1. 10 组主标题 ----------
 const titleGroups = [
     { text: "生日快乐\n愿你岁岁常欢愉\n年年皆胜意" },
     { text: "新的一岁，愿你闪闪发光\n万事皆可期待" },
@@ -12,7 +12,7 @@ const titleGroups = [
     { text: "祝你生日快乐\n未来可期\n不负心中热爱" }
 ];
 
-// ---------- 2. 悬浮公转祝福词 ----------
+// ---------- 2. 公转祝福词 ----------
 var orbitWords = [
     '生日快乐', '万事胜意', '平安喜乐', '前程似锦', 
     '岁岁常欢愉', '年年皆胜意', '未来可期', '所愿皆成真',
@@ -53,9 +53,9 @@ window.addEventListener('resize', () => {
     if (isAnimationReady) generateParticles(titleGroups[currentTitleIndex].text);
 });
 
-// ---------- 5. 细粒子点阵提取器 ----------
+// ---------- 5. 超细粒子提取（step = 1） ----------
 function getTextPoints(text) {
-    const fontSize = Math.min(W * 0.08, 40); // 手机缩减一点点，防止溢出
+    const fontSize = Math.min(W * 0.08, 40);
     const lineHeight = fontSize * 1.3;
     const lines = text.split('\n');
     
@@ -76,8 +76,8 @@ function getTextPoints(text) {
     const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
     const data = imageData.data;
     const points = [];
-    // 【核心修改】step 改为 2，粒子变细密，手机肉眼可见细腻星尘！
-    const step = 2; 
+    // 【超细】step = 1，每个像素都取样，粒子极其细腻
+    const step = 1; 
     for (let y = 0; y < offCanvas.height; y += step) {
         for (let x = 0; x < offCanvas.width; x += step) {
             const idx = (y * offCanvas.width + x) * 4;
@@ -91,7 +91,7 @@ function getTextPoints(text) {
     return points;
 }
 
-// ---------- 6. 生成主标题粒子（聚拢消散特效） ----------
+// ---------- 6. 生成主标题粒子 ----------
 function generateParticles(text) {
     const newPoints = getTextPoints(text);
     while (particles.length < newPoints.length) {
@@ -116,7 +116,7 @@ function generateParticles(text) {
     isAnimationReady = true;
 }
 
-// ---------- 7. 动画循环（微细粒子） ----------
+// ---------- 7. 动画循环（极细粒子） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
     particles.forEach(p => {
@@ -129,11 +129,11 @@ function animateText() {
             p.x = p.tx; p.y = p.ty;
         }
 
-        // 【核心修改】粒子变得更小更细腻：半径 1.5 ~ 2
+        // 粒子半径 1.5px，发光效果
         textCtx.beginPath();
-        textCtx.arc(p.x, p.y, 1.8, 0, Math.PI * 2);
+        textCtx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
         textCtx.shadowColor = '#FFB7C5';
-        textCtx.shadowBlur = 6;
+        textCtx.shadowBlur = 8;
         textCtx.fillStyle = p.color;
         textCtx.fill();
     });
@@ -167,8 +167,9 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 9. 触发公转悬浮祝福语（逐句浮现） ----------
+// ---------- 9. 公转祝福语（依次出现） ----------
 function renderOrbitWords() {
+    container.style.display = 'block'; // 确保容器可见
     let index = 0;
     function appendWord() {
         if (index >= orbitWords.length) return;
@@ -177,18 +178,20 @@ function renderOrbitWords() {
         let word = document.createElement('div');
         word.innerText = w;
         word.classList.add('word');
-        // 手机端缩小公转字体
+        // 手机字体缩小，防止重叠
         word.style.fontSize = window.innerWidth <= 600 ? '12px' : '18px';
+        word.style.color = '#FFB7C5';
 
         word_box.classList.add('word-box');
         
-        // 公转半径（错落有致，手机取 12vw~28vw 避免跑出去）
-        let dist = randomNum(14, 32) + 'vw'; 
-        // 每句给予不同的初始相位差，保证均匀散开
+        // 公转半径：手机端用 12vw~28vw，保证文字不跑出屏幕
+        let dist = randomNum(12, 28) + 'vw'; 
+        // 每个词初始角度错开 15°
         let deg = (index * 15) + 'deg'; 
-        // 速度随机 15~25秒转一圈，更舒缓
-        let speed = randomNum(15, 25) + 's'; 
-        let delay = randomNum(0.3, 0.8) + 's'; // 错开显现时间
+        // 速度随机 18~28秒转一圈，舒缓
+        let speed = randomNum(18, 28) + 's'; 
+        // 延迟 0.2~0.8 秒，实现依次出现
+        let delay = (0.2 + index * 0.15) + 's'; 
         
         word_box.style.setProperty("--dist", dist);
         word_box.style.setProperty("--deg", deg);
@@ -198,44 +201,52 @@ function renderOrbitWords() {
         word_box.appendChild(word);
         container.appendChild(word_box);
         index++;
-        // 每隔 300ms 浮现一句
-        setTimeout(appendWord, 300);
+        setTimeout(appendWord, 300); // 每隔0.3秒生成一个
     }
     appendWord();
 }
 
-// ---------- 10. 按钮核心逻辑 ----------
+// ---------- 10. 按钮逻辑 ----------
 function switchTitle() {
     currentTitleIndex = (currentTitleIndex + 1) % titleGroups.length;
     generateParticles(titleGroups[currentTitleIndex].text);
 }
 
 btn.addEventListener('click', function() {
-    clickCount++;
-    switchTitle(); // 每次点击，主标题粒子切换
+    // 首次点击时，取消音乐静音（因为音乐已静音自动播放）
+    if (bgMusic.muted) {
+        bgMusic.muted = false;
+    }
 
+    clickCount++;
+    switchTitle(); // 每次点击切换主标题
+
+    // 第 4 次点击（即按了3次后）触发背景切换
     if (clickCount >= 3) { 
-        // 1. 隐藏静态图片
+        // 隐藏静态图片
         document.getElementById('static-bg').style.display = 'none';
         
-        // 2. 强制播放视频
+        // 显示视频并播放（用户手势触发，必定成功）
         video.style.display = 'block';
-        video.play().catch(() => {});
+        video.play().catch(err => console.warn('视频播放失败:', err));
         
-        // 3. 播放音乐
-        bgMusic.style.display = 'block';
-        bgMusic.muted = false;
-        bgMusic.play().catch(() => {});
-        setTimeout(() => { bgMusic.muted = false; }, 200);
-
-        // 4. 展开公转悬浮祝福语
-        container.style.display = 'block';
+        // 展开公转悬浮祝福语
         renderOrbitWords();
     }
 });
 
-// ---------- 11. 启动 ----------
+// ---------- 11. 初始化 ----------
 resizeCanvas();
 initBgParticles();
 generateParticles(titleGroups[0].text);
 animateText();
+
+// 确保背景音乐静音自动播放（有些浏览器需额外处理）
+document.addEventListener('DOMContentLoaded', function() {
+    bgMusic.play().catch(() => {});
+});
+
+// 如果用户单击页面任意位置，也可取消静音（可选）
+document.addEventListener('click', function() {
+    if (bgMusic.muted) bgMusic.muted = false;
+});
