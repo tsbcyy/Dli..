@@ -55,7 +55,7 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ---------- 5. 粒子提取（【修复】上调 step，降低密度） ----------
+// ---------- 5. 粒子提取（【强制】step=1，绝不妥协） ----------
 function getTextPoints(text) {
     const fontSize = Math.min(W * 0.08, 40);
     const lineHeight = fontSize * 1.3;
@@ -72,8 +72,8 @@ function getTextPoints(text) {
     const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
     const data = imageData.data;
     const points = [];
-    // 【修复】手机 step=3，大幅降低密度；电脑 step=2，保证细腻
-    const step = isMobile ? 3 : 2; 
+    // 【绝对强制】step = 1，实现像素级采样
+    const step = 1; 
     for (let y = 0; y < offCanvas.height; y += step) {
         for (let x = 0; x < offCanvas.width; x += step) {
             const idx = (y * offCanvas.width + x) * 4;
@@ -96,13 +96,13 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环（【修复】缩小粒子尺寸） ----------
+// ---------- 7. 动画循环（【缩小尺寸】手机1.5px 电脑2.5px） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
-    // 【修复】粒子半径大幅缩小：手机 2.0px，电脑 3.0px
-    const radius = isMobile ? 2.0 : 3.0; 
+    // 因 step=1 已足够密集，缩小半径至 1.5px (手机) / 2.5px (电脑) 避免模糊
+    const radius = isMobile ? 1.5 : 2.5; 
     textCtx.shadowColor = '#FFB7C5';
-    textCtx.shadowBlur = 8; 
+    textCtx.shadowBlur = 6; // 降低模糊半径，配合小粒子更精致
     particles.forEach(p => {
         const dx = p.tx - p.x, dy = p.ty - p.y;
         if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) { p.x += dx * 0.08; p.y += dy * 0.08; } 
@@ -162,7 +162,7 @@ function preloadRandomWords() {
     checkAllLoaded();
 }
 
-// ---------- 10. 视频缓存（只拉取，不干扰播放） ----------
+// ---------- 10. 视频缓存（确保视频以二进制形式完整加载） ----------
 function preloadVideoXHR() {
     const xhr = new XMLHttpRequest();
     xhr.open('GET', 'video/skystar.mp4', true);
@@ -227,7 +227,7 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 14. 主流程（【修复】简单可靠的激活） ----------
+// ---------- 14. 主流程（音乐提前已响，在此取消静音） ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
@@ -236,11 +236,11 @@ function startMain(name, month) {
     generateParticles(titleGroups[0].text);
     animateText();
 
-    // 【修复】立刻唤醒视频（关键：用户点击触发）
+    // 【修复】立刻唤醒视频手势（为后续播放铺路）
     video.muted = true;
     video.play().catch(()=>{});
     
-    // 【修复】音乐立刻响起
+    // 【修复】音乐在此取消静音（因为一开始是静音播放的）
     bgMusic.muted = false;
     bgMusic.play().catch(()=>{});
 
@@ -254,28 +254,28 @@ function startMain(name, month) {
             return;
         }
 
-        // 第4句话时触发大招
+        // 第4句话（index===3）时，触发大招
         if (index === 3) {
-            // 【修复】去掉复杂逻辑，用最简单的方式触发
             video.style.display = 'block';
             video.muted = false;
             video.loop = true;
             video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
-
-            // 【修复】直接修改 display，不做花哨过渡
-            container.classList.add('show');
+            container.style.display = 'block';
         }
     }, 5000);
 }
 
-// ---------- 15. 页面启动（立即缓存） ----------
+// ---------- 15. 页面启动（【音乐】一进来就无声播放） ----------
 function preloadAll() {
+    // 1. 视频和悬浮词常规缓存
     preloadVideoXHR();
+    preloadRandomWords();
+
+    // 2. 音频：必须是用户触发、静音，且立刻播放
     bgMusic.muted = true; 
     bgMusic.play().catch(()=>{});
     bgMusic.addEventListener('canplaythrough', () => { loadManager.audioReady = true; checkAllLoaded(); });
     setTimeout(() => { if(!loadManager.audioReady) { loadManager.audioReady = true; checkAllLoaded(); } }, 8000);
-    preloadRandomWords();
 }
 
 // ---------- 16. 启动 ----------
