@@ -4,7 +4,7 @@ body {
     position: relative; overflow: hidden; background-color: #0b0a1a;
 }
 
-/* --- 前置输入页 (为了防止 QQ 浏览器 fixed 回弹，改用 absolute + 100% 撑满) --- */
+/* --- 前置输入页 --- */
 #entry-screen {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: radial-gradient(circle at center, #1a0b1e, #0a0410);
@@ -12,8 +12,7 @@ body {
 }
 .entry-box {
     background: rgba(255, 255, 255, 0.05); 
-    -webkit-backdrop-filter: blur(20px); /* QQ 兼容前缀 */
-    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
     padding: 40px 30px; border-radius: 30px; width: 90%; max-width: 360px;
     border: 1px solid rgba(255, 183, 197, 0.2); text-align: center;
     box-shadow: 0 0 40px rgba(255, 105, 180, 0.1);
@@ -43,38 +42,34 @@ body {
     background-size: cover; z-index: -2;
 }
 
-/* 视频底部对齐（针对 QQ 浏览器加双前缀） */
 #videofilm {
     width: 100%; height: 100%; 
     object-fit: cover;
     -webkit-object-fit: cover;
-    /* 强制底部对齐 */
     object-position: bottom center; 
     -webkit-object-position: bottom center; 
     position: absolute; z-index: -1; top: 0; left: 0;
 }
-#particles-canvas, #text-canvas {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    pointer-events: none; z-index: 2;
-}
-#particles-canvas { z-index: 1; }
 
-/* 悬浮词容器（基于原版逻辑改造，绝对居中） */
+/* --- 核心：解决悬浮词覆盖主标题的问题 --- */
+#particles-canvas { position: absolute; z-index: 1; pointer-events: none; }
+#text-canvas { position: absolute; z-index: 4; pointer-events: none; } /* 主标题必须最高层级 */
+
+/* 悬浮词（层级降低，保证不覆盖主标题） */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    overflow: hidden; z-index: 3; pointer-events: none;
+    overflow: hidden; z-index: 2; pointer-events: none; /* 悬浮词放在主标题下面 */
 }
 .word-box {
     position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%) rotateY(0deg);
+    margin-top: var(--margin-top);
+    margin-left: var(--margin-left);
     animation: rotY var(--animation-duration) linear infinite;
     animation-delay: var(--animation-delay);
 }
 .word-box .word {
     position: absolute;
     color: #BAABDA; font-family: '楷体';
-    /* 这是你原版代码的旋转逻辑 */
     animation: rotY var(--animation-duration) linear infinite reverse;
     animation-delay: var(--animation-delay);
 }
