@@ -1,4 +1,4 @@
-// ---------- 1. 数据 ----------
+// ---------- 1. 10组主标题 ----------
 const titleGroups = [
     { text: "生日快乐\n愿你岁岁常欢愉\n年年皆胜意" },
     { text: "新的一岁，愿你闪闪发光\n万事皆可期待" },
@@ -12,6 +12,7 @@ const titleGroups = [
     { text: "祝你生日快乐\n未来可期\n不负心中热爱" }
 ];
 
+// ---------- 2. 公转祝福语 ----------
 var orbitWords = [
     '生日快乐', '万事胜意', '平安喜乐', '前程似锦', '岁岁常欢愉',
     '年年皆胜意', '未来可期', '所愿皆成真', '多喜乐，长安宁',
@@ -26,7 +27,7 @@ function randomNum(min, max) {
     return (Math.random() * (max - min + 1) + min).toFixed(2);
 }
 
-// ---------- 2. DOM ----------
+// ---------- 3. DOM ----------
 const textCanvas = document.getElementById('text-canvas');
 const textCtx = textCanvas.getContext('2d');
 const particleCanvas = document.getElementById('particles-canvas');
@@ -36,19 +37,23 @@ const bgMusic = document.getElementById('bg-music');
 const btn = document.getElementById('next-btn');
 const container = document.querySelector('.container');
 const overlay = document.getElementById('loading-overlay');
+const staticBg = document.getElementById('static-bg');
+const endingOverlay = document.getElementById('ending-overlay');
 
 let W, H, particles = [], bgParticles = [];
-let currentTitleIndex = 0, clickCount = 0, isAnimationReady = false;
+let clickCount = 0;
+let switchCount = 0; // 记录已经切换到了第几句（0~9）
+let isEndingShown = false;
 const isMobile = window.innerWidth <= 600;
 
-// ---------- 3. 尺寸 ----------
+// ---------- 4. 尺寸 ----------
 function resizeCanvas() {
     W = textCanvas.width = particleCanvas.width = window.innerWidth;
     H = textCanvas.height = particleCanvas.height = window.innerHeight;
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ---------- 4. 提取粒子（手机优化步长，保持饱满尺寸2.5px） ----------
+// ---------- 5. 提取粒子（严格 step = 1） ----------
 function getTextPoints(text) {
     const fontSize = Math.min(W * 0.08, 40);
     const lineHeight = fontSize * 1.3;
@@ -66,8 +71,8 @@ function getTextPoints(text) {
     const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
     const data = imageData.data;
     const points = [];
-    // 手机用 step=3 保住性能，大屏用 step=2
-    const step = isMobile ? 3 : 2; 
+    // 【核心要求】强制 step = 1，确保极度细化，绝不妥协
+    const step = 1; 
     for (let y = 0; y < offCanvas.height; y += step) {
         for (let x = 0; x < offCanvas.width; x += step) {
             const idx = (y * offCanvas.width + x) * 4;
@@ -79,7 +84,7 @@ function getTextPoints(text) {
     return points;
 }
 
-// ---------- 5. 生成主标题 ----------
+// ---------- 6. 生成主标题 ----------
 function generateParticles(text) {
     const newPoints = getTextPoints(text);
     while (particles.length < newPoints.length) {
@@ -93,25 +98,25 @@ function generateParticles(text) {
         p.tx = newPoints[i].tx; p.ty = newPoints[i].ty;
         if (!p.animStart) { p.x = Math.random() * W; p.y = Math.random() * H; }
     });
-    isAnimationReady = true;
 }
 
-// ---------- 6. 动画循环（饱满 2.5px，无阴影保性能） ----------
+// ---------- 7. 动画循环（放大粒子、无阴影保性能） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
+    // 尺寸加大：手机 4px，电脑 5.5px
+    const radius = isMobile ? 4.0 : 5.5; 
     particles.forEach(p => {
         const dx = p.tx - p.x, dy = p.ty - p.y;
         if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
             p.x += dx * 0.08; p.y += dy * 0.08;
         } else { p.x = p.tx; p.y = p.ty; }
-        // 明确要求：粒子尺寸不能缩小，锁定为 2.5px
-        textCtx.beginPath(); textCtx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+        textCtx.beginPath(); textCtx.arc(p.x, p.y, radius, 0, Math.PI * 2);
         textCtx.fillStyle = p.color; textCtx.fill();
     });
     requestAnimationFrame(animateText);
 }
 
-// ---------- 7. 背景小粒子 ----------
+// ---------- 8. 背景小粒子 ----------
 function initBgParticles() {
     bgParticles = [];
     for (let i = 0; i < 50; i++) {
@@ -134,7 +139,7 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 8. 公转祝福语 ----------
+// ---------- 9. 公转祝福语 ----------
 function renderOrbitWords() {
     container.innerHTML = ''; container.style.display = 'block';
     let index = 0;
@@ -156,61 +161,82 @@ function renderOrbitWords() {
     appendWord();
 }
 
-// ---------- 9. 按钮交互 ----------
-function switchTitle() {
-    currentTitleIndex = (currentTitleIndex + 1) % titleGroups.length;
-    generateParticles(titleGroups[currentTitleIndex].text);
+// ---------- 10. 触发切换与完结逻辑 ----------
+function triggerSwitch() {
+    if (isEndingShown) return;
+
+    // 如果还没播完10句，则继续播
+    if (switchCount < titleGroups.length - 1) {
+        switchCount++;
+        generateParticles(titleGroups[switchCount].text);
+    } else {
+        // 如果已经播到了最后一句（第10句），触发完结
+        showEnding();
+    }
 }
+
+// ---------- 11. 展示完结页面 ----------
+function showEnding() {
+    if (isEndingShown) return;
+    isEndingShown = true;
+    endingOverlay.classList.add('show');
+    btn.style.display = 'none'; // 隐藏按钮
+    clearInterval(autoTimer); // 关闭自动轮播定时器
+}
+
+// ---------- 12. 按钮交互与视频触发 ----------
 btn.addEventListener('click', function() {
+    if (isEndingShown) return;
     if (bgMusic.muted) bgMusic.muted = false;
-    clickCount++; switchTitle();
-    if (clickCount >= 3) {
-        document.getElementById('static-bg').style.display = 'none';
-        video.style.display = 'block'; video.muted = false;
-        video.play().catch(()=>{});
-        renderOrbitWords();
+
+    clickCount++;
+    triggerSwitch(); // 切换文字
+
+    // 第4次点击（点击了3次后），释放大招
+    if (clickCount >= 3) { 
+        // 尝试播放视频
+        video.style.display = 'block';
+        video.muted = false;
+        video.play().then(() => {
+            staticBg.style.display = 'none'; // 播放成功则隐藏背景图
+        }).catch(() => {
+            // 如果视频没缓存好，隐藏视频，保持背景图保底
+            video.style.display = 'none';
+            staticBg.style.display = 'block';
+        });
+        renderOrbitWords(); // 展开公转祝福语
     }
 });
 
-// ---------- 10. 【核心】加载页预缓存逻辑 ----------
-async function preloadAll() {
-    try {
-        // ① 提前预下载视频（静音播一下立即暂停，强制浏览器拉取缓存）
-        video.muted = true;
-        await video.play();
-        video.pause(); 
-        
-        // ② 提前渲染背景粒子
-        initBgParticles();
-        
-        // ③ 提前计算第一个主标题的粒子点阵（这样切换时秒出）
-        generateParticles(titleGroups[0].text);
-        
-        // ④ 音频静音播放，保证媒体通道开启
-        bgMusic.muted = true;
-        bgMusic.play().catch(()=>{});
-        
-        // 模拟一个生成过程，给用户视觉缓冲（约 2 秒）
-        setTimeout(() => {
-            // 淡出加载页
-            overlay.classList.add('fade-out');
-            setTimeout(() => {
-                overlay.style.display = 'none';
-                btn.style.display = 'block';
-                // 取消音频静音（此时无声，等用户点屏幕/点按钮触发）
-            }, 800);
-        }, 2000);
-        
-    } catch (e) {
-        // 意外失败也放行，不卡住用户
-        overlay.style.display = 'none';
-        btn.style.display = 'block';
-    }
+// ---------- 13. 极速加载与自动切换 ----------
+let autoTimer;
+
+function preloadAll() {
+    // 1. 后台预下载视频
+    video.muted = true; video.load();
+    video.play().then(() => video.pause()).catch(()=>{});
+
+    // 2. 立即渲染
+    initBgParticles();
+    generateParticles(titleGroups[0].text);
+    bgMusic.muted = true; bgMusic.play().catch(()=>{});
+
+    // 3. 0.6秒后关闭加载页
+    setTimeout(() => {
+        overlay.classList.add('fade-out');
+        setTimeout(() => { 
+            overlay.style.display = 'none'; 
+            btn.style.display = 'block'; 
+        }, 800);
+    }, 600);
+
+    // 4. 自动切换计时器：每20秒自动播下一句
+    autoTimer = setInterval(() => {
+        if (!isEndingShown) triggerSwitch();
+    }, 20000);
 }
 
-// ---------- 11. 启动 ----------
+// ---------- 14. 启动 ----------
 resizeCanvas();
-// 主渲染线程即刻启动，因为文字在加载页里已经预计算好了
-animateText();
-// 开始预加载流程
+animateText(); 
 preloadAll();
