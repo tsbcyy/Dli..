@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="css/skystar.css">
   </head>
   <body>
-    <video id="videofilm" poster="img/skystar2.jpg" autoplay muted loop playsinline>
+    <!-- 背景视频初始隐藏，第4次点击出现 -->
+    <video id="videofilm" poster="img/skystar2.jpg" style="display:none;" muted loop playsinline webkit-playsinline>
       <source src="video/skystar.mp4" type="video/mp4">
     </video>
     <canvas id="particles-canvas"></canvas>
@@ -16,9 +17,11 @@
     <div class="texttwo"><h1>愿你岁岁常欢愉</h1></div>
     <div class="textthree"><h1>年年皆胜意</h1></div>
 
-    <audio src="video/晴天.mp3" autoplay loop muted></audio>
+    <!-- 音频初始隐藏，避免误触 -->
+    <audio src="video/晴天.mp3" style="display:none;" loop muted></audio>
     
-    <div class="container"></div>
+    <!-- 祝福语容器初始隐藏 -->
+    <div class="container" style="display:none;"></div>
 
     <button id="next-btn">🌸 切换祝福</button>
     
