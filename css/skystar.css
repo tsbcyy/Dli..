@@ -12,72 +12,66 @@ body {
     z-index: 0; pointer-events: none;
 }
 
-/* --- 彻底修复手机端不对齐中心的问题 --- */
+/* --- 主标题绝对居中 --- */
 .textone, .texttwo, .textthree {
     position: absolute; 
-    /* 强制绝对居中核心代码：左对齐 50%，再左移自身宽度 50% */
     left: 50%; transform: translateX(-50%);
-    width: auto; 
-    text-align: center; 
-    z-index: 3;
+    text-align: center; z-index: 3;
 }
-/* 缩小行距：减少 top 之间的差值 */
-.textone { top: 30%; } 
-.texttwo { top: 45%; } 
-.textthree { top: 60%; }
+.textone { top: 30%; } .texttwo { top: 45%; } .textthree { top: 60%; }
 @media (max-width: 600px) {
-    /* 手机上间距更小，不遮挡背景词 */
-    .textone { top: 28%; } 
-    .texttwo { top: 42%; } 
-    .textthree { top: 56%; }
+    .textone { top: 25%; } .texttwo { top: 45%; } .textthree { top: 65%; }
 }
 
 h1 {
     display: inline-block;
-    /* 缩小一个字号：从 clamp(22px, 6vw, 42px) 改为 16px~30px */
     font-size: clamp(16px, 4vw, 30px);
     font-family: '楷体', 'KaiTi', serif;
     color: #FFB7C5;
     text-shadow: 0 0 20px rgba(255, 105, 180, 0.6);
-    animation: fadeIn 1.5s forwards;
+    animation: fadeInTitle 1.5s forwards;
     animation-delay: 0.2s;
     opacity: 0;
-    /* 防止过度换行 */
-    white-space: nowrap; 
 }
-/* 手机上文字太长时允许换行，不撑出屏幕 */
-@media (max-width: 600px) {
-    h1 { white-space: normal; }
+@media (max-width: 600px) { h1 { white-space: normal; } }
+
+@keyframes fadeInTitle {
+    from { opacity: 0; transform: translateY(10px) scale(0.8); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* --- 悬浮词 --- */
+/* --- 悬浮祝福词：位置与旋转彻底分离 --- */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     overflow: hidden; z-index: 1; pointer-events: none;
 }
-:root { --margin-top: 0; --margin-left: 0; --animation-duration: 0s; --animation-delay: 0s; }
-div { transform-style: preserve-3d; }
+:root { --margin-top: 0; --margin-left: 0; --anim-speed: 0s; --anim-delay: 0s; }
 
 .word-box {
     position: absolute;
     top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
+    /* 定位核心：用 margin 将中心点分散出去 */
     margin-top: var(--margin-top);
     margin-left: var(--margin-left);
-    animation: fadeIn 0.8s forwards, rotY var(--animation-duration) linear infinite;
-    animation-delay: var(--animation-delay);
+    /* 用 transform 将基准点拉回中心，形成从中心散射的效果 */
+    transform: translate(-50%, -50%);
+    animation: fadeInWord 0.8s forwards;
+    animation-delay: var(--anim-delay);
     opacity: 0;
-    perspective: 800px;
 }
 .word-box .word {
-    position: absolute;
+    display: inline-block;
+    /* 旋转独立放在子元素上，完全不管位置，只负责原地绕 Y 轴转 */
+    animation: rotY var(--anim-speed) linear infinite;
     color: #BAABDA; font-family: '楷体';
 }
+
 @keyframes rotY {
-    to { transform: translate(-50%, -50%) rotateY(360deg); }
+    from { transform: rotateY(0deg); }
+    to { transform: rotateY(360deg); }
 }
-@keyframes fadeIn {
-    from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+@keyframes fadeInWord {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
     to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
