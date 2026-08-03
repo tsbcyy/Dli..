@@ -1,99 +1,72 @@
-* {
-    margin: 0;
-    padding: 0;
-}
+* { margin: 0; padding: 0; }
 body {
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-    perspective: 1300px;
-    background-color: #0b0a1a;
+    height: 100vh; display: flex; align-items: center; justify-content: center;
+    position: relative; overflow: hidden; perspective: 1300px; background-color: #0b0a1a;
 }
 #videofilm {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    position: fixed;
-    z-index: -1;
-    top: 0;
-    left: 0;
+    width: 100%; height: 100%; object-fit: cover;
+    position: fixed; z-index: -1; top: 0; left: 0;
 }
 #particles-canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    pointer-events: none;
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    z-index: 0; pointer-events: none;
 }
 
-/* ----- 主标题区域（绝对居中修复） ----- */
+/* ----- 主标题区域 ----- */
 .textone, .texttwo, .textthree {
-    position: absolute;
-    width: 100%;             /* 占满屏幕宽度 */
-    text-align: center;      /* 文字居中 */
-    z-index: 3;
-    display: flex;
-    justify-content: center; /* 强制内容水平居中 */
-    left: 0;                 /* 左对齐，防止偏移 */
+    position: absolute; width: 100%; text-align: center; z-index: 3;
+    display: flex; justify-content: center; left: 0;
 }
-.textone { top: 32%; }
-.texttwo { top: 48%; }
-.textthree { top: 64%; }
-
-/* 手机竖屏微调间距 */
+.textone { top: 30%; } .texttwo { top: 48%; } .textthree { top: 66%; }
 @media (max-width: 600px) {
-    .textone { top: 30%; }
-    .texttwo { top: 48%; }
-    .textthree { top: 66%; }
+    .textone { top: 28%; } .texttwo { top: 48%; } .textthree { top: 68%; }
 }
 
-/* ----- 主标题粉色粒子特效（颜色+阴影+淡入） ----- */
 h1 {
-    display: inline-block;   /* 宽度随文字自适应，保证居中 */
-    font-size: clamp(22px, 6vw, 42px); /* 手机稍大，更清晰 */
+    display: inline-block;
+    font-size: clamp(22px, 6vw, 42px);
     font-family: '楷体', 'KaiTi', serif;
-    
-    /* 粉色特效核心 */
-    color: #FFB7C5;          /* 柔和的粉红色 */
-    text-shadow: 0 0 20px rgba(255, 105, 180, 0.6); /* 粉红色光晕 */
-    
+    color: #FFB7C5;
+    text-shadow: 0 0 20px rgba(255, 105, 180, 0.6);
     animation: fadeIn 1.5s forwards;
     animation-delay: 0.2s;
-    opacity: 0;              /* 初始透明，逐步浮现 */
+    opacity: 0;
 }
 
-/* ----- 背景祝福词容器（保持原特效不变） ----- */
+/* ----- 背景祝福词（绝对居中散布） ----- */
 .container {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    z-index: 1;
-    pointer-events: none;
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    overflow: hidden; z-index: 1; pointer-events: none;
 }
-:root { --margin-top: 0; --margin-left: 0; --animation-duration: 0s; --animation-delay: 0s; }
+:root { --tx: 0; --ty: 0; --animation-duration: 0s; --animation-delay: 0s; }
 div { transform-style: preserve-3d; }
 
 .word-box {
     position: absolute;
-    margin-top: var(--margin-top);
-    animation: fadeIn 1.2s forwards, rotY var(--animation-duration) linear infinite;
+    /* 核心修复：以屏幕中心(50%, 50%)为原点，再微调偏移量 */
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) translate(var(--tx), var(--ty));
+    animation: fadeIn 0.8s forwards, rotY var(--animation-duration) linear infinite;
     animation-delay: var(--animation-delay);
     opacity: 0;
 }
 .word-box .word {
     position: absolute;
-    margin-left: var(--margin-left);
     animation-duration: reverse;
-    color: #BAABDA;
-    font-family: '楷体';
+    color: #BAABDA; font-family: '楷体';
 }
+
 @keyframes rotY { to { transform: rotateY(360deg); } }
-@keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+@keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(0.8); } to { opacity: 1; } }
+
+/* ----- 换页按钮样式 ----- */
+#next-btn {
+    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+    z-index: 10;
+    padding: 12px 30px; border: 1px solid rgba(255, 183, 197, 0.8);
+    border-radius: 30px; background: rgba(20, 10, 30, 0.6);
+    color: #FFB7C5; font-size: 16px; font-family: '楷体';
+    backdrop-filter: blur(5px); box-shadow: 0 0 15px rgba(255, 105, 180, 0.3);
+    cursor: pointer; transition: all 0.2s; outline: none;
+}
+#next-btn:active { transform: translateX(-50%) scale(0.92); }
