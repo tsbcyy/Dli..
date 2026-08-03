@@ -13,7 +13,7 @@ function randomNum(min, max) {
     return (Math.random() * (max - min + 1) + min).toFixed(2);
 }
 
-// ---------- 2. 生成悬浮词（拉大手机散射范围，绝不重叠） ----------
+// ---------- 2. 核心：生成祝福词（保证均匀公转分布） ----------
 function renderWords() {
     let container = document.querySelector('.container');
     let isMobile = window.innerWidth <= 600;
@@ -26,30 +26,33 @@ function renderWords() {
         let word = document.createElement('div');
         word.innerText = w;
         word.classList.add('word');
-        // 手机字体再小一点，减少拥挤
+        // 手机端使用极小字号，确保不会互相重叠
         word.style.fontSize = isMobile ? '11px' : '16px';
 
         word_box.classList.add('word-box');
         
-        // --- 核心修正：手机端拉大散射范围，从 25vw 扩至 35vw ---
-        let mt = randomNum(-30, 30) + 'vh'; 
-        let ml = isMobile ? randomNum(-35, 35) + 'vw' : randomNum(-40, 40) + 'vw';
+        // 使用 translate 公转的核心设置：
+        // 1. 定义不同的半径 (dist) 和初始角度，形成错落轨道
+        let dist = randomNum(15, 35) + 'vw'; 
+        // 2. 每次生成增加 20deg 初始相位差，保证散开
+        let initDeg = (index * 20) + 'deg'; 
         
-        word_box.style.setProperty("--margin-top", mt);
-        word_box.style.setProperty("--margin-left", ml);
-        word_box.style.setProperty("--anim-speed", randomNum(8, 15) + 's');
-        word_box.style.setProperty("--anim-delay", randomNum(-3, 0) + 's');
+        word_box.style.setProperty("--dist", dist);
+        // 传递旋转角度到 CSS 变量（利用 CSS calc）
+        word_box.style.setProperty("--init-deg", initDeg);
+        word_box.style.setProperty("--speed", randomNum(12, 20) + 's');
+        word_box.style.setProperty("--delay", randomNum(-3, 0) + 's');
 
         word_box.appendChild(word);
         container.appendChild(word_box);
         index++;
-        setTimeout(appendWord, 300);
+        // 逐步浮现（每 200ms 浮现一句）
+        setTimeout(appendWord, 200);
     }
     appendWord();
 }
-window.addEventListener('load', renderWords);
 
-// ---------- 3. 5组主标题安全切换逻辑 ----------
+// ---------- 3. 交互逻辑：前 3 次切换主标题，第 4 次放飞满天星 ----------
 var titleGroups = [
     { one: "生日快乐", two: "愿你岁岁常欢愉", three: "年年皆胜意" },
     { one: "新的一岁，愿你闪闪发光", two: "万事皆可期待", three: "" },
@@ -59,6 +62,8 @@ var titleGroups = [
 ];
 
 let currentTitleIndex = 0;
+let clickCount = 0; // 计数器
+
 let textone = document.querySelector('.textone').querySelector('h1');
 let texttwo = document.querySelector('.texttwo').querySelector('h1');
 let textthree = document.querySelector('.textthree').querySelector('h1');
@@ -67,34 +72,46 @@ function switchTitle() {
     currentTitleIndex = (currentTitleIndex + 1) % titleGroups.length;
     let group = titleGroups[currentTitleIndex];
     
-    // 直接换内容，确保如果 group 有值就显示，无值就显示空
     textone.innerHTML = group.one || '';
     texttwo.innerHTML = group.two || '';
     textthree.innerHTML = group.three || '';
     
-    // 移除动画，然后再重新添加，强制触发“重新淡入”
+    // 重置淡入动画
     textone.style.animation = 'none';
     texttwo.style.animation = 'none';
     textthree.style.animation = 'none';
-    // 强制浏览器重绘
-    textone.offsetHeight; 
-    texttwo.offsetHeight; 
-    textthree.offsetHeight;
-    // 恢复默认动画，使新文字浮现
+    textone.offsetHeight; texttwo.offsetHeight; textthree.offsetHeight; 
     textone.style.animation = '';
     texttwo.style.animation = '';
     textthree.style.animation = '';
 }
 
-// 按钮点击切换
 document.getElementById('next-btn').addEventListener('click', function() {
+    // 第一步：先切换标题
     switchTitle();
+    clickCount++;
+
+    // 第二步：点击 3 次后（即第 4 次点击时），触发展开全部效果
+    if (clickCount >= 3) {
+        // 1. 播放背景视频
+        const video = document.getElementById('videofilm');
+        video.style.display = 'block';
+        video.play().catch(() => {}); // 强制播放
+
+        // 2. 播放背景音乐
+        const audio = document.querySelector('audio');
+        audio.style.display = 'block';
+        audio.muted = false;
+        audio.play().catch(() => {});
+
+        // 3. 绽放满天星悬浮祝福词
+        const container = document.querySelector('.container');
+        container.style.display = 'block';
+        renderWords(); // 生成并逐步浮现
+    }
 });
 
-// 自动切换（每20秒自动换一组）
-setInterval(switchTitle, 20000);
-
-// ---------- 4. 粉色粒子特效 ----------
+// ---------- 4. 粉色粒子特效（一直存在，当作基础背景） ----------
 const canvas = document.getElementById('particles-canvas');
 const ctx = canvas.getContext('2d');
 let width, height, particles = [];
@@ -103,11 +120,11 @@ function initParticles() {
     width = canvas.width = window.innerWidth;
     height = canvas.height = window.innerHeight;
     particles = [];
-    for (let i = 0; i < 70; i++) {
+    for (let i = 0; i < 60; i++) {
         particles.push({
             x: Math.random() * width, y: Math.random() * height,
-            vx: (Math.random() - 0.5) * 0.6, vy: (Math.random() - 0.5) * 0.6,
-            radius: Math.random() * 3 + 1,
+            vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+            radius: Math.random() * 2 + 1,
             color: `hsla(340, 80%, 70%, ${Math.random() * 0.5 + 0.3})`
         });
     }
@@ -125,21 +142,3 @@ function drawParticles() {
 }
 window.addEventListener('resize', initParticles);
 initParticles(); drawParticles();
-
-// ---------- 5. 强制加载视频 + 音乐播放解锁 ----------
-document.addEventListener('DOMContentLoaded', function() {
-    // 强制播放视频（应对某些手机浏览器）
-    const video = document.querySelector('video');
-    if (video) video.play().catch(() => {});
-    
-    const audio = document.querySelector('audio');
-    if (audio) {
-        const unmuteAudio = () => {
-            if (audio.muted) { audio.muted = false; 
-                document.removeEventListener('click', unmuteAudio);
-                document.removeEventListener('touchstart', unmuteAudio); }
-        };
-        document.addEventListener('click', unmuteAudio);
-        document.addEventListener('touchstart', unmuteAudio);
-    }
-});
