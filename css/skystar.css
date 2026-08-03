@@ -1,14 +1,9 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body {
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-    background-color: #0b0a1a;
+    height: 100%; width: 100%; overflow: hidden;
+    background-color: #0b0a1a; font-family: '楷体', 'KaiTi', serif;
 }
-body {
-    display: flex; align-items: center; justify-content: center;
-    position: relative;
-}
+body { display: flex; align-items: center; justify-content: center; position: relative; }
 
 /* --- 前置输入页 --- */
 #entry-screen {
@@ -17,94 +12,84 @@ body {
     display: flex; align-items: center; justify-content: center; z-index: 9999;
 }
 .entry-box {
-    background: rgba(255, 255, 255, 0.05); 
-    -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+    background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px);
     padding: 40px 30px; border-radius: 30px; width: 90%; max-width: 360px;
     border: 1px solid rgba(255, 183, 197, 0.2); text-align: center;
     box-shadow: 0 0 40px rgba(255, 105, 180, 0.1);
 }
-.entry-title { color: #FFB7C5; font-size: 24px; font-family: '楷体'; letter-spacing: 2px; }
-.entry-sub { color: #A98BC0; font-size: 14px; font-family: '楷体'; margin: 10px 0 25px; opacity: 0.8; }
+.entry-title { color: #FFB7C5; font-size: 24px; letter-spacing: 2px; }
+.entry-sub { color: #A98BC0; font-size: 14px; margin: 10px 0 25px; opacity: 0.8; }
 .input-group { margin-bottom: 18px; text-align: left; }
-.input-group label { color: #E8F9FD; font-size: 14px; font-family: '楷体'; display: block; margin-bottom: 6px; }
+.input-group label { color: #E8F9FD; font-size: 14px; display: block; margin-bottom: 6px; }
 .entry-input {
     width: 100%; padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(255, 183, 197, 0.3);
-    background: rgba(0, 0, 0, 0.3); color: #fff; font-size: 16px; font-family: '楷体'; outline: none;
+    background: rgba(0, 0, 0, 0.3); color: #fff; font-size: 16px; outline: none;
 }
 .entry-input:focus { border-color: #FFB7C5; box-shadow: 0 0 15px rgba(255, 105, 180, 0.2); }
 .entry-btn {
     width: 100%; padding: 14px; margin-top: 10px; border-radius: 12px; border: none;
     background: linear-gradient(135deg, #FFB7C5, #FF7EB3); color: #fff; font-size: 18px;
-    font-family: '楷体'; cursor: pointer; transition: 0.3s; letter-spacing: 2px; box-shadow: 0 0 20px rgba(255, 105, 180, 0.3);
+    cursor: pointer; transition: 0.3s; letter-spacing: 2px; box-shadow: 0 0 20px rgba(255, 105, 180, 0.3);
 }
 .entry-btn:active { transform: scale(0.95); }
-.entry-loading { display: flex; align-items: center; justify-content: center; margin-top: 15px; color: #FFB7C5; font-size: 14px; font-family: '楷体'; gap: 10px; }
+.entry-loading { display: flex; align-items: center; justify-content: center; margin-top: 15px; color: #FFB7C5; font-size: 14px; gap: 10px; }
 .loader-small { width: 18px; height: 18px; border: 2px solid rgba(255, 183, 197, 0.2); border-top: 2px solid #FFB7C5; border-radius: 50%; animation: spin 1s linear infinite; }
 
-/* --- 主界面：照片必须塞满屏幕 --- */
-#main-screen {
-    display: none; /* 默认隐藏，JS 触发 */
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 0;
-}
-
-/* 静态背景 - 强制 cover 铺满，不留黑边 */
+/* --- 主界面：彻底消除黑边 --- */
+#main-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }
 #static-bg {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: url('../img/skystar2.jpg') no-repeat center center;
-    background-size: cover; /* 塞满屏幕 */
-    z-index: -2;
+    background-size: cover; /* 强制铺满 */
 }
-
-/* 视频背景 - 强制 object-fit: cover 铺满，不留黑边 */
 #videofilm {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    object-fit: cover;     /* 核心：填满整个屏幕 */
-    object-position: center bottom; /* 保持底部对齐 */
-    z-index: -1;
+    position: absolute; top: 0; left: 0;
+    /* 核心：强制拉伸覆盖，不留黑边 */
+    min-width: 100vw; min-height: 100vh;
+    object-fit: cover; object-position: center bottom;
 }
 
-/* 画布层 */
-#particles-canvas { position: absolute; z-index: 1; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-#text-canvas { position: absolute; z-index: 4; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; } /* 主标题必须最高层且居中 */
+/* --- 画布层 --- */
+#particles-canvas, #text-canvas {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;
+}
+#particles-canvas { z-index: 1; }
+#text-canvas { z-index: 4; } /* 主标题最高层 */
 
-/* --- 悬浮祝福语：以屏幕中心为圆心散开，绝不覆盖主标题 --- */
+/* --- 悬浮祝福语：完美绕中心公转 --- */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    overflow: hidden; z-index: 2; pointer-events: none; /* 层级低于主标题 */
+    overflow: hidden; z-index: 2; pointer-events: none;
 }
+:root { --dist: 20vw; --deg: 0deg; --speed: 10s; --delay: 0s; }
 .word-box {
-    position: absolute;
-    /* 核心：强制锚点在屏幕正中心 */
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    /* 通过 margin 往外散射，形成完美的居中星群 */
-    margin-top: var(--margin-top);
-    margin-left: var(--margin-left);
-    animation: rotY var(--animation-duration) linear infinite;
-    animation-delay: var(--animation-delay);
+    position: absolute; top: 50%; left: 50%;
+    /* 核心：绕中心公转 */
+    animation: orbit var(--speed) linear infinite;
+    animation-delay: var(--delay); opacity: 0;
 }
 .word-box .word {
     position: absolute;
     color: #BAABDA; font-family: '楷体';
-    animation: rotY var(--animation-duration) linear infinite reverse;
-    animation-delay: var(--animation-delay);
+    text-shadow: 0 0 8px rgba(255, 105, 180, 0.4);
+    animation: fadeInWord 0.8s forwards; animation-delay: var(--delay);
 }
-@keyframes rotY {
-    0% { transform: rotateY(0deg); }
-    100% { transform: rotateY(360deg); }
+@keyframes orbit {
+    0% { transform: translate(-50%, -50%) rotate(var(--deg)) translateX(var(--dist)) rotate(calc(var(--deg) * -1)); }
+    100% { transform: translate(-50%, -50%) rotate(calc(var(--deg) + 360deg)) translateX(var(--dist)) rotate(calc(0deg - var(--deg) - 360deg)); }
 }
+@keyframes fadeInWord { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; } }
 
 /* --- 完结层 --- */
 #ending-overlay {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     z-index: 100; pointer-events: none; opacity: 0; transition: opacity 1.5s ease;
-    background: rgba(11, 10, 26, 0.6); 
-    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    background: rgba(11, 10, 26, 0.6); backdrop-filter: blur(6px);
 }
 #ending-overlay.show { opacity: 1; pointer-events: auto; }
 .ending-icon { font-size: 70px; margin-bottom: 15px; animation: floatUp 2s infinite alternate; }
-.ending-text { font-size: clamp(28px, 6vw, 48px); color: #FFB7C5; font-family: '楷体'; text-shadow: 0 0 30px rgba(255, 105, 180, 0.8); letter-spacing: 4px; }
-.ending-sub { font-size: clamp(18px, 4vw, 28px); color: #E8F9FD; font-family: '楷体'; margin-top: 10px; opacity: 0.8; }
+.ending-text { font-size: clamp(28px, 6vw, 48px); color: #FFB7C5; text-shadow: 0 0 30px rgba(255, 105, 180, 0.8); letter-spacing: 4px; }
+.ending-sub { font-size: clamp(18px, 4vw, 28px); color: #E8F9FD; margin-top: 10px; opacity: 0.8; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes floatUp { from { transform: translateY(0); } to { transform: translateY(-15px); } }
