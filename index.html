@@ -2,7 +2,6 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <!-- 针对 QQ 浏览器/微信环境的兼容 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="x5-orientation" content="portrait" />
     <meta name="x5-page-mode" content="no-title" />
@@ -10,12 +9,11 @@
     <link rel="stylesheet" href="css/skystar.css">
   </head>
   <body>
-    <!-- 1. 前置表单层 (QQ 浏览器不支持 fixed 背景，改用 absolute 撑满) -->
+    <!-- 1. 前置输入页 -->
     <div id="entry-screen">
       <div class="entry-box">
         <div class="entry-title">🌟 专属祝福生成器</div>
         <div class="entry-sub">为亲爱的TA，定制星光璀璨的一刻</div>
-        
         <div class="input-group">
           <label>TA 的昵称</label>
           <input type="text" id="user-name" placeholder="请输入名字" class="entry-input">
@@ -24,9 +22,7 @@
           <label>TA 的生日月份</label>
           <input type="number" id="user-month" placeholder="1 - 12" min="1" max="12" class="entry-input">
         </div>
-        
         <button id="start-btn" class="entry-btn">✨ 开始为她祝福</button>
-        
         <div id="loading-status" class="entry-loading" style="display:none;">
           <div class="loader-small"></div>
           <span>正在生成专属祝福视频...</span>
@@ -37,15 +33,13 @@
     <!-- 2. 主内容层 -->
     <div id="main-screen" style="display:none;">
       <div id="static-bg"></div>
-      <!-- 针对 QQ 浏览器必须加 loop 和 playsinline -->
+      <!-- 加上了 preload="auto" 让浏览器尽早下载 -->
       <video id="videofilm" poster="img/skystar2.jpg" loop style="display:none;" muted playsinline webkit-playsinline x5-video-player-type="h5" x5-video-player-fullscreen="true" preload="auto">
         <source src="video/skystar.mp4" type="video/mp4">
       </video>
       <canvas id="particles-canvas"></canvas>
       <canvas id="text-canvas"></canvas>
       <audio id="bg-music" src="video/晴天.mp3" muted preload="auto"></audio>
-      
-      <!-- 悬浮祝福语容器（由你提供的 JS 动态生成） -->
       <div class="container" style="display:none;"></div>
     </div>
 
