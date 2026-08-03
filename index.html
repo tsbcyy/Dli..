@@ -3,28 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>生日快乐，愿你岁岁常欢愉</title>
+    <title>生日快乐</title>
     <link rel="stylesheet" href="css/skystar.css">
   </head>
   <body>
-    <!-- 背景视频初始隐藏，第4次点击出现 -->
-    <video id="videofilm" poster="img/skystar2.jpg" style="display:none;" muted loop playsinline webkit-playsinline>
+    <!-- 1. 初始静态背景图片 -->
+    <div id="static-bg"></div>
+
+    <!-- 2. 隐藏的视频背景 -->
+    <video id="videofilm" poster="img/skystar2.jpg" style="display:none;" muted playsinline webkit-playsinline preload="auto">
       <source src="video/skystar.mp4" type="video/mp4">
     </video>
+
+    <!-- 3. 粒子特效层（漂浮的粉色小点） -->
     <canvas id="particles-canvas"></canvas>
 
-    <div class="textone"><h1>生日快乐</h1></div>
-    <div class="texttwo"><h1>愿你岁岁常欢愉</h1></div>
-    <div class="textthree"><h1>年年皆胜意</h1></div>
+    <!-- 4. 主标题粒子文字层（切换时平滑过渡） -->
+    <canvas id="text-canvas"></canvas>
 
-    <!-- 音频初始隐藏，避免误触 -->
-    <audio src="video/晴天.mp3" style="display:none;" loop muted></audio>
-    
-    <!-- 祝福语容器初始隐藏 -->
-    <div class="container" style="display:none;"></div>
+    <!-- 5. 隐藏的背景音乐 -->
+    <audio id="bg-music" src="video/晴天.mp3" style="display:none;" loop preload="auto"></audio>
 
-    <button id="next-btn">🌸 切换祝福</button>
-    
+    <!-- 6. 按钮 -->
+    <button id="next-btn">🌸按钮</button>
+
     <script src="js/skystar.js"></script>
   </body>
 </html>
