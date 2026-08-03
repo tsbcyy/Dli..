@@ -46,6 +46,7 @@ const endingDynamic = document.getElementById('ending-dynamic');
 let W, H, particles = [], bgParticles = [];
 let switchCount = 0, isEndingShown = false, autoTimer, videoBlobUrl = null;
 const isMobile = window.innerWidth <= 600;
+const isQQ = /MQQBrowser|QQBrowser/i.test(navigator.userAgent); // 判断是否在 QQ 浏览器
 const loadManager = { videoReady: false, audioReady: false, wordsReady: false, isAllReady: false };
 
 // ---------- 4. 尺寸适配 ----------
@@ -95,10 +96,12 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环 (手机2.2px) ----------
+// ---------- 7. 动画循环（恢复大尺寸粒子和发光） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
-    const radius = isMobile ? 2.2 : 3.5; 
+    const radius = isMobile ? 4.5 : 6; 
+    textCtx.shadowColor = '#FFB7C5';
+    textCtx.shadowBlur = 12; // 加回强力发光
     particles.forEach(p => {
         const dx = p.tx - p.x, dy = p.ty - p.y;
         if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) { p.x += dx * 0.08; p.y += dy * 0.08; } 
@@ -112,7 +115,7 @@ function animateText() {
 // ---------- 8. 背景小粒子 ----------
 function initBgParticles() {
     bgParticles = [];
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 60; i++) {
         bgParticles.push({
             x: Math.random() * W, y: Math.random() * H, vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
             r: Math.random() * 2 + 1, color: `hsla(340, 80%, 70%, ${Math.random() * 0.4 + 0.2})`
@@ -131,7 +134,7 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 9. 预加载悬浮词（公转逻辑） ----------
+// ---------- 9. 预加载悬浮词（平滑激活） ----------
 function preloadRandomWords() {
     container.innerHTML = '';
     let f = document.createDocumentFragment();
@@ -140,9 +143,9 @@ function preloadRandomWords() {
         let word = document.createElement('div');
         word.innerText = w; word.classList.add('word');
         word.style.fontSize = isMobile ? '14px' : '18px'; 
-        word.style.color = '#BAABDA';
+        word.style.color = '#FFB7C5';
         word_box.classList.add('word-box');
-        // 公转半径和角度（错落有致）
+        // 公转轨道
         let dist = randomNum(15, 35) + 'vw'; 
         let deg = (index * 15) + 'deg'; 
         let speed = randomNum(15, 25) + 's'; 
@@ -155,27 +158,41 @@ function preloadRandomWords() {
         f.appendChild(word_box);
     });
     container.appendChild(f);
+    // 注意：此时 `.container` 的默认 CSS 是 visibility:hidden; opacity:0;
+    // 等待 index===3 时再激活
     loadManager.wordsReady = true;
     checkAllLoaded();
 }
 
-// ---------- 10. 【核心】一打开页面就开始 XHR 缓存 ----------
+// ---------- 10. XHR 缓存 + 回退机制 ----------
 function preloadVideoXHR() {
     if (videoBlobUrl) return;
+    // QQ 浏览器对 Blob URL 支持极其不稳定，如果遇到必须回退到标准 src
     const xhr = new XMLHttpRequest();
     xhr.open('GET', 'video/skystar.mp4', true);
     xhr.responseType = 'blob';
     xhr.onload = function() {
         if (this.status === 200) {
-            videoBlobUrl = URL.createObjectURL(this.response);
-            video.src = videoBlobUrl;
-            loadManager.videoReady = true;
-            checkAllLoaded();
+            try {
+                videoBlobUrl = URL.createObjectURL(this.response);
+                video.src = videoBlobUrl;
+                loadManager.videoReady = true;
+                checkAllLoaded();
+            } catch (e) {
+                // QQ 浏览器失败回退到普通路径
+                video.src = 'video/skystar.mp4';
+                loadManager.videoReady = true;
+                checkAllLoaded();
+            }
         } else {
+            // 网络错误回退
+            video.src = 'video/skystar.mp4';
             setTimeout(() => { if(!loadManager.videoReady) { loadManager.videoReady = true; checkAllLoaded(); } }, 3000);
         }
     };
     xhr.onerror = function() {
+        // 网络错误回退
+        video.src = 'video/skystar.mp4';
         setTimeout(() => { if(!loadManager.videoReady) { loadManager.videoReady = true; checkAllLoaded(); } }, 3000);
     };
     xhr.send();
@@ -224,7 +241,7 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 14. 主流程（音乐一进主界面就响） ----------
+// ---------- 14. 主流程（【核心修复】悬浮词激活） ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
@@ -233,11 +250,11 @@ function startMain(name, month) {
     generateParticles(titleGroups[0].text);
     animateText();
 
-    // 手势唤醒视频（不播放，只预激活）
+    // 预激活动画手势
     video.muted = true;
     video.play().then(() => video.pause()).catch(()=>{});
     
-    // 【核心】音乐从一开始主界面出现就立刻响起！
+    // 音乐立刻响起
     bgMusic.muted = false;
     bgMusic.play().catch(()=>{});
 
@@ -251,29 +268,27 @@ function startMain(name, month) {
             return;
         }
 
-        // 第4句话（index===3）时，触发视频+悬浮词
+        // 第4句话时触发大招
         if (index === 3) {
+            // 1. 激活视频（强制底部无黑边）
             video.style.display = 'block';
             video.muted = false;
             video.loop = true;
             video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
-            container.style.display = 'block'; // 释放悬浮词
+
+            // 2. 【核心修复】完美激活悬浮祝福语，QQ浏览器和普通浏览器双兼容
+            container.classList.add('show'); 
         }
-    }, 5000); // 5秒切换
+    }, 5000);
 }
 
-// ---------- 15. 页面启动（立即缓存所有资源） ----------
+// ---------- 15. 页面启动（立即缓存） ----------
 function preloadAll() {
-    // 1. 立即可始 XHR 下载视频
     preloadVideoXHR();
-    
-    // 2. 静音预加载音频
     bgMusic.muted = true; 
     bgMusic.play().catch(()=>{});
     bgMusic.addEventListener('canplaythrough', () => { loadManager.audioReady = true; checkAllLoaded(); });
     setTimeout(() => { if(!loadManager.audioReady) { loadManager.audioReady = true; checkAllLoaded(); } }, 8000);
-
-    // 3. 预生成悬浮祝福语
     preloadRandomWords();
 }
 
