@@ -55,7 +55,7 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ---------- 5. 粒子提取（【强制】step=1，绝不妥协） ----------
+// ---------- 5. 粒子提取（强制 step=1） ----------
 function getTextPoints(text) {
     const fontSize = Math.min(W * 0.08, 40);
     const lineHeight = fontSize * 1.3;
@@ -72,7 +72,6 @@ function getTextPoints(text) {
     const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
     const data = imageData.data;
     const points = [];
-    // 【绝对强制】step = 1，实现像素级采样
     const step = 1; 
     for (let y = 0; y < offCanvas.height; y += step) {
         for (let x = 0; x < offCanvas.width; x += step) {
@@ -96,13 +95,13 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环（【缩小尺寸】手机1.5px 电脑2.5px） ----------
+// ---------- 7. 动画循环（【尺寸调大】手机 2.5px，电脑 4.0px） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
-    // 因 step=1 已足够密集，缩小半径至 1.5px (手机) / 2.5px (电脑) 避免模糊
-    const radius = isMobile ? 1.5 : 2.5; 
+    // 稍微放大点，配合 step=1 的密度，看起来像发光的粉红颗粒
+    const radius = isMobile ? 2.5 : 4.0; 
     textCtx.shadowColor = '#FFB7C5';
-    textCtx.shadowBlur = 6; // 降低模糊半径，配合小粒子更精致
+    textCtx.shadowBlur = 6; 
     particles.forEach(p => {
         const dx = p.tx - p.x, dy = p.ty - p.y;
         if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) { p.x += dx * 0.08; p.y += dy * 0.08; } 
@@ -162,26 +161,30 @@ function preloadRandomWords() {
     checkAllLoaded();
 }
 
-// ---------- 10. 视频缓存（确保视频以二进制形式完整加载） ----------
-function preloadVideoXHR() {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'video/skystar.mp4', true);
-    xhr.responseType = 'blob';
-    xhr.onload = function() {
-        if (this.status === 200) {
-            video.src = URL.createObjectURL(this.response);
+// ---------- 10. 【核心修改】视频改用原生下载模式 ----------
+function preloadVideoStandard() {
+    // 直接设置 src，利用浏览器原生缓存机制
+    video.src = 'video/skystar.mp4';
+    // 触发预加载
+    video.load();
+    // 静音激活一次，让浏览器开始下载（符合移动端策略）
+    video.muted = true;
+    video.play().then(() => video.pause()).catch(()=>{});
+    
+    // 监听资源加载完成事件
+    video.addEventListener('canplaythrough', function onReady() {
+        video.removeEventListener('canplaythrough', onReady);
+        loadManager.videoReady = true;
+        checkAllLoaded();
+    });
+    
+    // 网络极慢情况下的超时放行（20秒）
+    setTimeout(() => {
+        if (!loadManager.videoReady) {
             loadManager.videoReady = true;
             checkAllLoaded();
-        } else {
-            video.src = 'video/skystar.mp4';
-            setTimeout(() => { if(!loadManager.videoReady) { loadManager.videoReady = true; checkAllLoaded(); } }, 3000);
         }
-    };
-    xhr.onerror = function() {
-        video.src = 'video/skystar.mp4';
-        setTimeout(() => { if(!loadManager.videoReady) { loadManager.videoReady = true; checkAllLoaded(); } }, 3000);
-    };
-    xhr.send();
+    }, 20000);
 }
 
 // ---------- 11. 加载完成检查 ----------
@@ -227,7 +230,7 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 14. 主流程（音乐提前已响，在此取消静音） ----------
+// ---------- 14. 主流程 ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
@@ -236,11 +239,11 @@ function startMain(name, month) {
     generateParticles(titleGroups[0].text);
     animateText();
 
-    // 【修复】立刻唤醒视频手势（为后续播放铺路）
+    // 唤醒视频手势
     video.muted = true;
     video.play().catch(()=>{});
     
-    // 【修复】音乐在此取消静音（因为一开始是静音播放的）
+    // 音乐取消静音
     bgMusic.muted = false;
     bgMusic.play().catch(()=>{});
 
@@ -254,7 +257,7 @@ function startMain(name, month) {
             return;
         }
 
-        // 第4句话（index===3）时，触发大招
+        // 第4句话触发大招
         if (index === 3) {
             video.style.display = 'block';
             video.muted = false;
@@ -265,13 +268,14 @@ function startMain(name, month) {
     }, 5000);
 }
 
-// ---------- 15. 页面启动（【音乐】一进来就无声播放） ----------
+// ---------- 15. 页面启动（音乐一打开即静音播放） ----------
 function preloadAll() {
-    // 1. 视频和悬浮词常规缓存
-    preloadVideoXHR();
+    // 1. 原生下载视频
+    preloadVideoStandard();
+    // 2. 预构建悬浮祝福语
     preloadRandomWords();
 
-    // 2. 音频：必须是用户触发、静音，且立刻播放
+    // 3. 音乐一进页面立即静音播放
     bgMusic.muted = true; 
     bgMusic.play().catch(()=>{});
     bgMusic.addEventListener('canplaythrough', () => { loadManager.audioReady = true; checkAllLoaded(); });
