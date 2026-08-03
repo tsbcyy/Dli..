@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="css/skystar.css">
   </head>
   <body>
-    <!-- 1. 前置表单层（完全遮挡主界面） -->
+    <!-- 1. 前置表单层（输入页面） -->
     <div id="entry-screen">
       <div class="entry-box">
         <div class="entry-title">🌟 专属祝福生成器</div>
@@ -31,10 +31,11 @@
       </div>
     </div>
 
-    <!-- 2. 主内容层（初始隐藏） -->
+    <!-- 2. 主内容层 -->
     <div id="main-screen" style="display:none;">
       <div id="static-bg"></div>
-      <video id="videofilm" poster="img/skystar2.jpg" style="display:none;" muted playsinline webkit-playsinline preload="auto">
+      <!-- 这里加了 loop 属性 -->
+      <video id="videofilm" poster="img/skystar2.jpg" loop style="display:none;" muted playsinline webkit-playsinline preload="auto">
         <source src="video/skystar.mp4" type="video/mp4">
       </video>
       <canvas id="particles-canvas"></canvas>
