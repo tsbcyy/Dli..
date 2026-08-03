@@ -7,28 +7,35 @@
     <link rel="stylesheet" href="css/skystar.css">
   </head>
   <body>
-    <!-- 初始静态背景图片 -->
+    <!-- 0. 预加载遮罩层 -->
+    <div id="loading-overlay">
+      <div class="loader-circle"></div>
+      <div class="loading-text">🌙 正在生成专属祝福页面...</div>
+      <div class="loading-sub">为你打造星光璀璨的一刻</div>
+    </div>
+
+    <!-- 1. 初始静态背景图片 -->
     <div id="static-bg"></div>
 
-    <!-- 隐藏的视频背景（第4次点击显示） -->
+    <!-- 2. 隐藏的视频背景（预加载使用） -->
     <video id="videofilm" poster="img/skystar2.jpg" style="display:none;" muted playsinline webkit-playsinline preload="auto">
       <source src="video/skystar.mp4" type="video/mp4">
     </video>
 
-    <!-- 粒子特效层（漂浮小点） -->
+    <!-- 3. 粒子特效层 -->
     <canvas id="particles-canvas"></canvas>
-
-    <!-- 主标题粒子文字层 -->
+    
+    <!-- 4. 主标题粒子文字层 -->
     <canvas id="text-canvas"></canvas>
 
-    <!-- 背景音乐（autoplay，静音开始） -->
+    <!-- 5. 背景音乐 -->
     <audio id="bg-music" src="video/晴天.mp3" autoplay loop muted preload="auto"></audio>
 
-    <!-- 悬浮祝福语容器（初始隐藏） -->
+    <!-- 6. 悬浮祝福语容器 -->
     <div class="container" style="display:none;"></div>
 
-    <!-- 按钮 -->
-    <button id="next-btn">🌸 换一句</button>
+    <!-- 7. 按钮 -->
+    <button id="next-btn" style="display:none;">🌸 换一句</button>
 
     <script src="js/skystar.js"></script>
   </body>
