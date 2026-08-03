@@ -7,27 +7,27 @@
     <link rel="stylesheet" href="css/skystar.css">
   </head>
   <body>
-    <!-- 1. 初始静态背景图片 -->
+    <!-- 初始静态背景图片 -->
     <div id="static-bg"></div>
 
-    <!-- 2. 隐藏的视频背景 -->
+    <!-- 隐藏的视频背景（第4次点击显示） -->
     <video id="videofilm" poster="img/skystar2.jpg" style="display:none;" muted playsinline webkit-playsinline preload="auto">
       <source src="video/skystar.mp4" type="video/mp4">
     </video>
 
-    <!-- 3. 粒子特效层（漂浮的粉色小点） -->
+    <!-- 粒子特效层（漂浮小点） -->
     <canvas id="particles-canvas"></canvas>
 
-    <!-- 4. 主标题粒子文字层（切换时平滑过渡） -->
+    <!-- 主标题粒子文字层 -->
     <canvas id="text-canvas"></canvas>
 
-    <!-- 5. 隐藏的背景音乐 -->
-    <audio id="bg-music" src="video/晴天.mp3" style="display:none;" loop preload="auto"></audio>
+    <!-- 背景音乐（autoplay，静音开始） -->
+    <audio id="bg-music" src="video/晴天.mp3" autoplay loop muted preload="auto"></audio>
 
-    <!-- 6. 悬浮祝福语层（初始隐藏，第4次点击触发公转） -->
+    <!-- 悬浮祝福语容器（初始隐藏） -->
     <div class="container" style="display:none;"></div>
 
-    <!-- 7. 按钮 -->
+    <!-- 按钮 -->
     <button id="next-btn">🌸 换一句</button>
 
     <script src="js/skystar.js"></script>
