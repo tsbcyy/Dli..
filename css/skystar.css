@@ -12,7 +12,6 @@ body {
     z-index: 0; pointer-events: none;
 }
 
-/* ----- 主标题区域 ----- */
 .textone, .texttwo, .textthree {
     position: absolute; width: 100%; text-align: center; z-index: 3;
     display: flex; justify-content: center; left: 0;
@@ -33,33 +32,43 @@ h1 {
     opacity: 0;
 }
 
-/* ----- 背景祝福词（绝对居中散布） ----- */
+/* ----- 核心修正：浮动祝福词 ----- */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     overflow: hidden; z-index: 1; pointer-events: none;
 }
-:root { --tx: 0; --ty: 0; --animation-duration: 0s; --animation-delay: 0s; }
+:root { --margin-top: 0; --margin-left: 0; --animation-duration: 0s; --animation-delay: 0s; }
 div { transform-style: preserve-3d; }
 
 .word-box {
     position: absolute;
-    /* 核心修复：以屏幕中心(50%, 50%)为原点，再微调偏移量 */
+    /* 锚点定在屏幕正中心 */
     top: 50%; left: 50%;
-    transform: translate(-50%, -50%) translate(var(--tx), var(--ty));
+    /* 用 margin 将元素向外偏移，完美避开与 transform 的冲突 */
+    margin-top: var(--margin-top);
+    margin-left: var(--margin-left);
+    /* transform 全部留给旋转动画 */
+    transform: translate(-50%, -50%);
     animation: fadeIn 0.8s forwards, rotY var(--animation-duration) linear infinite;
     animation-delay: var(--animation-delay);
     opacity: 0;
+    perspective: 600px; /* 增加 3D 立体感 */
 }
 .word-box .word {
     position: absolute;
-    animation-duration: reverse;
     color: #BAABDA; font-family: '楷体';
 }
 
-@keyframes rotY { to { transform: rotateY(360deg); } }
-@keyframes fadeIn { from { opacity: 0; transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(0.8); } to { opacity: 1; } }
+/* 原地 3D 旋转（绕自身中心轴） */
+@keyframes rotY {
+    to { transform: translate(-50%, -50%) rotateY(360deg); }
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
 
-/* ----- 换页按钮样式 ----- */
+/* ----- 按钮样式 ----- */
 #next-btn {
     position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
     z-index: 10;
