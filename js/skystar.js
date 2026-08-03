@@ -1,13 +1,33 @@
-// ---------- 1. 设置 5 组主标题（支持多行换行） ----------
+// ---------- 1. 扩充至 10 组主标题 ----------
 const titleGroups = [
     { text: "生日快乐\n愿你岁岁常欢愉\n年年皆胜意" },
     { text: "新的一岁，愿你闪闪发光\n万事皆可期待" },
     { text: "祝你生日快乐\n不止今天\n而是未来每一天" },
     { text: "愿你三冬暖\n愿你春不寒\n愿你天黑有灯" },
-    { text: "愿你前程似锦\n愿你一生可爱\n一生无忧" }
+    { text: "愿你前程似锦\n愿你一生可爱\n一生无忧" },
+    { text: "愿你眼里有光\n心中有爱\n目光所及皆美好" },
+    { text: "愿你此生尽兴\n赤诚善良\n永远热泪盈眶" },
+    { text: "愿你平安喜乐\n万事胜意\n前程万里" },
+    { text: "愿你朝朝暮暮\n都有微风与花开" },
+    { text: "祝你生日快乐\n未来可期\n不负心中热爱" }
 ];
 
-// ---------- 2. 获取 DOM 节点 ----------
+// ---------- 2. 悬浮公转祝福词 ----------
+var orbitWords = [
+    '生日快乐', '万事胜意', '平安喜乐', '前程似锦', 
+    '岁岁常欢愉', '年年皆胜意', '未来可期', '所愿皆成真',
+    '多喜乐，长安宁', '星光满载', '光芒万丈', '炙热与自由',
+    '万事尽可期待', '诸事顺遂', '百事从欢', '岁岁年年',
+    '万喜万般宜', '愿你三冬暖', '愿你春不寒', '永远热泪盈眶',
+    '前程万里', '平安顺遂', '得偿所愿', '年少有为',
+    '一生可爱', '一世无忧', '前程似锦', '喜乐长安'
+];
+
+function randomNum(min, max) {
+    return (Math.random() * (max - min + 1) + min).toFixed(2);
+}
+
+// ---------- 3. 获取 DOM ----------
 const textCanvas = document.getElementById('text-canvas');
 const textCtx = textCanvas.getContext('2d');
 const particleCanvas = document.getElementById('particles-canvas');
@@ -15,15 +35,15 @@ const particleCtx = particleCanvas.getContext('2d');
 const video = document.getElementById('videofilm');
 const bgMusic = document.getElementById('bg-music');
 const btn = document.getElementById('next-btn');
+const container = document.querySelector('.container');
 
 let W, H;
 let particles = [];
-let targetPoints = [];
 let currentTitleIndex = 0;
 let clickCount = 0;
 let isAnimationReady = false;
 
-// ---------- 3. 尺寸适配函数 ----------
+// ---------- 4. 尺寸适配 ----------
 function resizeCanvas() {
     W = textCanvas.width = particleCanvas.width = window.innerWidth;
     H = textCanvas.height = particleCanvas.height = window.innerHeight;
@@ -33,13 +53,12 @@ window.addEventListener('resize', () => {
     if (isAnimationReady) generateParticles(titleGroups[currentTitleIndex].text);
 });
 
-// ---------- 4. 文字点阵提取器 ----------
+// ---------- 5. 细粒子点阵提取器 ----------
 function getTextPoints(text) {
-    const fontSize = Math.min(W * 0.09, 45); // 手机 9vw，大屏 45px
+    const fontSize = Math.min(W * 0.08, 40); // 手机缩减一点点，防止溢出
     const lineHeight = fontSize * 1.3;
     const lines = text.split('\n');
     
-    // 离屏 Canvas
     const offCanvas = document.createElement('canvas');
     offCanvas.width = W * 0.9;
     offCanvas.height = H * 0.6;
@@ -49,7 +68,6 @@ function getTextPoints(text) {
     offCtx.textAlign = 'center';
     offCtx.textBaseline = 'middle';
 
-    // 逐行绘制
     const startY = (offCanvas.height - lines.length * lineHeight) / 2 + lineHeight / 2;
     lines.forEach((line, index) => {
         offCtx.fillText(line, offCanvas.width / 2, startY + index * lineHeight);
@@ -58,12 +76,12 @@ function getTextPoints(text) {
     const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
     const data = imageData.data;
     const points = [];
-    const step = 3; // 步长 3，手机端粒子数量均衡，不卡顿
+    // 【核心修改】step 改为 2，粒子变细密，手机肉眼可见细腻星尘！
+    const step = 2; 
     for (let y = 0; y < offCanvas.height; y += step) {
         for (let x = 0; x < offCanvas.width; x += step) {
             const idx = (y * offCanvas.width + x) * 4;
             if (data[idx + 3] > 128) {
-                // 将坐标映射回真实屏幕
                 const tx = (x / offCanvas.width) * W;
                 const ty = (y / offCanvas.height) * H;
                 points.push({ tx, ty });
@@ -73,74 +91,56 @@ function getTextPoints(text) {
     return points;
 }
 
-// ---------- 5. 生成并过渡粒子（切换时触发） ----------
+// ---------- 6. 生成主标题粒子（聚拢消散特效） ----------
 function generateParticles(text) {
     const newPoints = getTextPoints(text);
-    targetPoints = newPoints;
-
-    // 补齐或减少粒子数量
     while (particles.length < newPoints.length) {
         particles.push({
             x: Math.random() * W,
             y: Math.random() * H,
-            tx: 0,
-            ty: 0,
-            // 粉红色调渐变
-            color: `hsla(${330 + Math.random() * 30}, 80%, ${60 + Math.random() * 30}%, 0.9)`
+            tx: 0, ty: 0,
+            color: `hsla(${330 + Math.random() * 30}, 80%, ${65 + Math.random() * 25}%, 0.9)`
         });
     }
-    // 删掉多余的粒子
     particles.splice(newPoints.length);
 
-    // 为每个粒子分配目标位置，并加上随机延迟（形成“漂移聚拢”效果）
     particles.forEach((p, i) => {
         p.tx = newPoints[i].tx;
         p.ty = newPoints[i].ty;
-        // 添加随机偏移起始点，产生“从四面八方聚集”或“向外消散”的粒子特效
         if (!p.animStart) {
             p.x = Math.random() * W;
             p.y = Math.random() * H;
         }
-        p.delay = Math.random() * 0.5; // 0~0.5秒延迟
-        p.speed = 0.05 + Math.random() * 0.08; // 移动速度
-        p.progress = 0;
+        p.speed = 0.05 + Math.random() * 0.08;
     });
     isAnimationReady = true;
 }
 
-// ---------- 6. 动画循环（粒子主标题） ----------
+// ---------- 7. 动画循环（微细粒子） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
-    let allDone = true;
-    
     particles.forEach(p => {
-        // 缓动逼近目标 (Ease Out)
         const dx = p.tx - p.x;
         const dy = p.ty - p.y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        
-        if (dist > 0.5) {
+        if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
             p.x += dx * 0.08;
             p.y += dy * 0.08;
-            allDone = false;
         } else {
-            p.x = p.tx;
-            p.y = p.ty;
+            p.x = p.tx; p.y = p.ty;
         }
 
-        // 绘制粒子（加一点发光效果）
+        // 【核心修改】粒子变得更小更细腻：半径 1.5 ~ 2
         textCtx.beginPath();
-        textCtx.arc(p.x, p.y, 2.5, 0, Math.PI * 2);
+        textCtx.arc(p.x, p.y, 1.8, 0, Math.PI * 2);
         textCtx.shadowColor = '#FFB7C5';
-        textCtx.shadowBlur = 10;
+        textCtx.shadowBlur = 6;
         textCtx.fillStyle = p.color;
         textCtx.fill();
     });
-    
     requestAnimationFrame(animateText);
 }
 
-// ---------- 7. 漂浮粉色小粒子（背景点缀） ----------
+// ---------- 8. 背景漂浮粒子 ----------
 function initBgParticles() {
     const bgParticles = [];
     for (let i = 0; i < 50; i++) {
@@ -167,7 +167,44 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 8. 按钮逻辑：前 3 次切标题，第 4 次换背景+音乐 ----------
+// ---------- 9. 触发公转悬浮祝福语（逐句浮现） ----------
+function renderOrbitWords() {
+    let index = 0;
+    function appendWord() {
+        if (index >= orbitWords.length) return;
+        let w = orbitWords[index];
+        let word_box = document.createElement('div');
+        let word = document.createElement('div');
+        word.innerText = w;
+        word.classList.add('word');
+        // 手机端缩小公转字体
+        word.style.fontSize = window.innerWidth <= 600 ? '12px' : '18px';
+
+        word_box.classList.add('word-box');
+        
+        // 公转半径（错落有致，手机取 12vw~28vw 避免跑出去）
+        let dist = randomNum(14, 32) + 'vw'; 
+        // 每句给予不同的初始相位差，保证均匀散开
+        let deg = (index * 15) + 'deg'; 
+        // 速度随机 15~25秒转一圈，更舒缓
+        let speed = randomNum(15, 25) + 's'; 
+        let delay = randomNum(0.3, 0.8) + 's'; // 错开显现时间
+        
+        word_box.style.setProperty("--dist", dist);
+        word_box.style.setProperty("--deg", deg);
+        word_box.style.setProperty("--speed", speed);
+        word_box.style.setProperty("--delay", delay);
+
+        word_box.appendChild(word);
+        container.appendChild(word_box);
+        index++;
+        // 每隔 300ms 浮现一句
+        setTimeout(appendWord, 300);
+    }
+    appendWord();
+}
+
+// ---------- 10. 按钮核心逻辑 ----------
 function switchTitle() {
     currentTitleIndex = (currentTitleIndex + 1) % titleGroups.length;
     generateParticles(titleGroups[currentTitleIndex].text);
@@ -175,30 +212,30 @@ function switchTitle() {
 
 btn.addEventListener('click', function() {
     clickCount++;
-    switchTitle(); // 切换文字粒子
+    switchTitle(); // 每次点击，主标题粒子切换
 
-    // 前 3 次（点击1,2,3）只切换标题，第 4 次（点击4）触发背景
     if (clickCount >= 3) { 
-        // A. 隐藏静态背景图
+        // 1. 隐藏静态图片
         document.getElementById('static-bg').style.display = 'none';
         
-        // B. 显示并强制播放视频（用户手势下一定成功）
+        // 2. 强制播放视频
         video.style.display = 'block';
         video.play().catch(() => {});
         
-        // C. 播放音乐
+        // 3. 播放音乐
         bgMusic.style.display = 'block';
         bgMusic.muted = false;
         bgMusic.play().catch(() => {});
-        
-        // 为防止某些手机仍静音，设置一个超时取消静音（可选）
         setTimeout(() => { bgMusic.muted = false; }, 200);
+
+        // 4. 展开公转悬浮祝福语
+        container.style.display = 'block';
+        renderOrbitWords();
     }
 });
 
-// ---------- 9. 初始化启动 ----------
+// ---------- 11. 启动 ----------
 resizeCanvas();
 initBgParticles();
-// 首次加载显示第一组标题
 generateParticles(titleGroups[0].text);
 animateText();
