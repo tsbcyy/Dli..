@@ -18,7 +18,7 @@ body {
 }
 #particles-canvas { z-index: 1; }
 
-/* --- 公转布局（悬浮祝福语绕中心旋转） --- */
+/* --- 公转悬浮词 --- */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     overflow: hidden; z-index: 0; pointer-events: none;
@@ -28,17 +28,15 @@ body {
 .word-box {
     position: absolute;
     top: 50%; left: 50%;
-    /* 让锚点定在中心，通过变量控制半径和角度 */
     animation: orbit var(--speed) linear infinite;
     animation-delay: var(--delay);
-    opacity: 0;
+    opacity: 0; /* 初始透明，靠 fadeIn 显示 */
 }
 .word-box .word {
     position: absolute;
-    color: #FFB7C5; /* 悬浮词改为粉金色，配合视频 */
+    color: #FFB7C5;
     font-family: '楷体';
     text-shadow: 0 0 8px rgba(255, 105, 180, 0.4);
-    /* 逐步淡入 */
     animation: fadeInWord 0.8s forwards;
     animation-delay: var(--delay);
 }
