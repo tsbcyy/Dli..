@@ -1,4 +1,15 @@
-// ---------- 1. 10组主标题 ----------
+// ---------- 1. 【悬浮祝福语】改用生日祝福词（去掉您提供的古诗词） ----------
+var words = [
+    '生日快乐', '万事胜意', '平安喜乐', '前程似锦', 
+    '岁岁常欢愉', '年年皆胜意', '未来可期', '所愿皆成真',
+    '多喜乐，长安宁', '星光满载', '光芒万丈', '炙热与自由',
+    '万事尽可期待', '诸事顺遂', '百事从欢', '岁岁年年',
+    '万喜万般宜', '愿你三冬暖', '愿你春不寒', '永远热泪盈眶',
+    '前程万里', '平安顺遂', '得偿所愿', '年少有为',
+    '一生可爱', '一世无忧', '前程似锦', '喜乐长安'
+];
+
+// ---------- 2. 10组主标题 ----------
 const titleGroups = [
     { text: "生日快乐\n愿你岁岁常欢愉\n年年皆胜意" },
     { text: "新的一岁，愿你闪闪发光\n万事皆可期待" },
@@ -12,22 +23,13 @@ const titleGroups = [
     { text: "祝你生日快乐\n未来可期\n不负心中热爱" }
 ];
 
-// ---------- 2. 公转祝福语 ----------
-var orbitWords = [
-    '生日快乐', '万事胜意', '平安喜乐', '前程似锦', '岁岁常欢愉',
-    '年年皆胜意', '未来可期', '所愿皆成真', '多喜乐，长安宁',
-    '星光满载', '光芒万丈', '炙热与自由', '万事尽可期待',
-    '诸事顺遂', '百事从欢', '岁岁年年', '万喜万般宜',
-    '愿你三冬暖', '愿你春不寒', '永远热泪盈眶', '前程万里',
-    '平安顺遂', '得偿所愿', '年少有为', '一生可爱',
-    '一世无忧', '前程似锦', '喜乐长安'
-];
-
+// ---------- 3. 辅助函数 ----------
 function randomNum(min, max) {
-    return (Math.random() * (max - min + 1) + min).toFixed(2);
+    var num = (Math.random() * (max - min + 1) + min).toFixed(2);
+    return num;
 }
 
-// ---------- 3. DOM 元素 ----------
+// ---------- 4. DOM 元素 ----------
 const textCanvas = document.getElementById('text-canvas');
 const textCtx = textCanvas.getContext('2d');
 const particleCanvas = document.getElementById('particles-canvas');
@@ -51,16 +53,17 @@ let isEndingShown = false;
 let autoTimer;
 
 const isMobile = window.innerWidth <= 600;
+// 加载管理器：必须全部就绪才能释放
 const loadManager = { videoReady: false, audioReady: false, wordsReady: false, isAllReady: false };
 
-// ---------- 4. 尺寸适配 ----------
+// ---------- 5. 尺寸适配 ----------
 function resizeCanvas() {
     W = textCanvas.width = particleCanvas.width = window.innerWidth;
     H = textCanvas.height = particleCanvas.height = window.innerHeight;
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ---------- 5. 极致提取 (step=1) ----------
+// ---------- 6. 极致粒子提取 (step=1) ----------
 function getTextPoints(text) {
     const fontSize = Math.min(W * 0.08, 40);
     const lineHeight = fontSize * 1.3;
@@ -87,7 +90,7 @@ function getTextPoints(text) {
     return points;
 }
 
-// ---------- 6. 生成粒子 ----------
+// ---------- 7. 生成粒子 ----------
 function generateParticles(text) {
     const newPoints = getTextPoints(text);
     while (particles.length < newPoints.length) {
@@ -100,7 +103,7 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环（减小一号：手机2.2px, 电脑3.5px） ----------
+// ---------- 8. 动画循环（手机 2.2px, 电脑 3.5px） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
     const radius = isMobile ? 2.2 : 3.5; 
@@ -114,7 +117,7 @@ function animateText() {
     requestAnimationFrame(animateText);
 }
 
-// ---------- 8. 背景粒子 ----------
+// ---------- 9. 背景小粒子 ----------
 function initBgParticles() {
     bgParticles = [];
     for (let i = 0; i < 50; i++) {
@@ -136,38 +139,41 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 9. 预加载悬浮词 ----------
-function preloadOrbitWords() {
+// ---------- 10. 预加载悬浮祝福语（此时 words 数组已经是生日祝福语了） ----------
+function preloadRandomWords() {
     container.innerHTML = '';
-    let index = 0;
-    function appendWord() {
-        if (index >= orbitWords.length) {
-            loadManager.wordsReady = true; checkAllLoaded(); return;
-        }
-        let w = orbitWords[index];
+    let f = document.createDocumentFragment();
+    words.forEach(w => {
         let word_box = document.createElement('div');
         let word = document.createElement('div');
-        word.innerText = w; word.classList.add('word');
-        word.style.fontSize = isMobile ? '12px' : '18px'; word.style.color = '#FFB7C5';
+        word.innerText = w;
+        word.classList.add('word');
+        word.style.color = '#BAABDA';
+        word.style.fontFamily = '楷体';
+        word.style.fontSize = isMobile ? '14px' : '20px';
         word_box.classList.add('word-box');
-        let dist = randomNum(12, 28) + 'vw'; let deg = (index * 15) + 'deg';
-        let speed = randomNum(18, 28) + 's'; let delay = (0.2 + index * 0.15) + 's';
-        word_box.style.setProperty("--dist", dist); word_box.style.setProperty("--deg", deg);
-        word_box.style.setProperty("--speed", speed); word_box.style.setProperty("--delay", delay);
-        word_box.appendChild(word); container.appendChild(word_box);
-        index++; setTimeout(appendWord, 300);
-    }
-    appendWord();
+        
+        word_box.style.setProperty("--margin-top", randomNum(-30, 30) + 'vh');
+        word_box.style.setProperty("--margin-left", randomNum(-35, 35) + 'vw');
+        word_box.style.setProperty("--animation-duration", randomNum(8, 20) + 's');
+        word_box.style.setProperty("--animation-delay", randomNum(-20, 0) + 's');
+        
+        word_box.appendChild(word);
+        f.appendChild(word_box);
+    });
+    container.appendChild(f);
+    loadManager.wordsReady = true;
+    checkAllLoaded();
 }
 
-// ---------- 10. 核心加载完成检查 ----------
+// ---------- 11. 加载完成检查 ----------
 function checkAllLoaded() {
     if (loadManager.videoReady && loadManager.audioReady && loadManager.wordsReady) {
         loadManager.isAllReady = true;
     }
 }
 
-// ---------- 11. 大结局触发 ----------
+// ---------- 12. 大结局 ----------
 function showEnding(name, month) {
     if (isEndingShown) return;
     isEndingShown = true;
@@ -176,7 +182,7 @@ function showEnding(name, month) {
     clearInterval(autoTimer);
 }
 
-// ---------- 12. 点击“开始”触发主流程 ----------
+// ---------- 13. 主流程触发 ----------
 startBtn.addEventListener('click', function() {
     const name = userNameInput.value.trim() || '亲爱的';
     const month = userMonthInput.value.trim() || '每一';
@@ -187,11 +193,9 @@ startBtn.addEventListener('click', function() {
         return;
     }
 
-    // 保持输入页的加载条显示
     startBtn.style.display = 'none';
     loadingStatus.style.display = 'flex';
 
-    // 等待完全加载
     const waitForLoad = setInterval(() => {
         if (loadManager.isAllReady) {
             clearInterval(waitForLoad);
@@ -199,7 +203,6 @@ startBtn.addEventListener('click', function() {
         }
     }, 300);
 
-    // 15秒保底
     setTimeout(() => {
         if (!loadManager.isAllReady) {
             clearInterval(waitForLoad);
@@ -209,24 +212,20 @@ startBtn.addEventListener('click', function() {
     }, 15000);
 });
 
-// ---------- 13. 正式主流程 ----------
+// ---------- 14. 正式主界面 ----------
 function startMain(name, month) {
-    // 1. 隐藏输入页，显示主界面
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
     
-    // 2. 主界面必备渲染
     initBgParticles();
     generateParticles(titleGroups[0].text);
     animateText();
 
-    // 3. 向浏览器“注册”用户手势权限
     video.muted = true;
     video.play().then(() => video.pause()).catch(()=>{});
     bgMusic.muted = true;
     bgMusic.play().catch(()=>{});
 
-    // 4. 8秒自动切换
     let index = 0;
     autoTimer = setInterval(() => {
         index++;
@@ -237,12 +236,10 @@ function startMain(name, month) {
             return;
         }
 
-        // 播放三个后（即到了第4个周期时，index === 3）放大招
         if (index === 3) {
-            // 触发音乐+视频+悬浮
             video.style.display = 'block';
             video.muted = false;
-            video.loop = true; // 【核心修复】强制开启循环播放
+            video.loop = true;
             video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
             
             bgMusic.muted = false;
@@ -250,10 +247,10 @@ function startMain(name, month) {
 
             container.style.display = 'block'; // 释放悬浮词
         }
-    }, 8000); // 8秒间隔
+    }, 8000);
 }
 
-// ---------- 14. 页面启动，后台立刻预加载 ----------
+// ---------- 15. 页面启动预加载 ----------
 function preloadAll() {
     video.muted = true; video.load();
     video.play().then(() => video.pause()).catch(()=>{});
@@ -265,9 +262,9 @@ function preloadAll() {
     bgMusic.addEventListener('canplaythrough', () => { loadManager.audioReady = true; checkAllLoaded(); });
     setTimeout(() => { if(!loadManager.audioReady) { loadManager.audioReady = true; checkAllLoaded(); } }, 8000);
 
-    preloadOrbitWords();
+    preloadRandomWords(); // 这里生成的是生日祝福语
 }
 
-// ---------- 15. 启动 ----------
+// ---------- 16. 启动 ----------
 resizeCanvas();
 preloadAll();
