@@ -35,7 +35,7 @@ body { display: flex; align-items: center; justify-content: center; position: re
 .entry-loading { display: flex; align-items: center; justify-content: center; margin-top: 15px; color: #FFB7C5; font-size: 14px; gap: 10px; }
 .loader-small { width: 18px; height: 18px; border: 2px solid rgba(255, 183, 197, 0.2); border-top: 2px solid #FFB7C5; border-radius: 50%; animation: spin 1s linear infinite; }
 
-/* --- 主界面：强制填满底部 --- */
+/* --- 主界面 --- */
 #main-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }
 #static-bg {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -55,28 +55,44 @@ body { display: flex; align-items: center; justify-content: center; position: re
 #particles-canvas { z-index: 1; }
 #text-canvas { z-index: 4; }
 
-/* --- 悬浮祝福语 --- */
+/* --- 【核心修复】悬浮祝福语（统一使用层级+可见性） --- */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    overflow: hidden; z-index: 2; pointer-events: none;
+    overflow: hidden; 
+    z-index: 5; /* 保证在画布上方 */
+    pointer-events: none;
+    /* 初始完全隐藏，且完全不占渲染，用 opacity + visibility */
+    opacity: 0; 
+    visibility: hidden;
+    transition: opacity 1s ease-in-out, visibility 1s ease-in-out;
+}
+.container.show {
+    opacity: 1;
+    visibility: visible;
 }
 :root { --dist: 20vw; --deg: 0deg; --speed: 10s; --delay: 0s; }
 .word-box {
     position: absolute; top: 50%; left: 50%;
     animation: orbit var(--speed) linear infinite;
-    animation-delay: var(--delay); opacity: 0;
+    animation-delay: var(--delay); 
 }
 .word-box .word {
     position: absolute;
-    color: #BAABDA; font-family: '楷体';
-    text-shadow: 0 0 8px rgba(255, 105, 180, 0.4);
-    animation: fadeInWord 0.8s forwards; animation-delay: var(--delay);
+    color: #FFB7C5; /* 改成微微亮粉色，更配生日氛围 */
+    font-family: '楷体';
+    text-shadow: 0 0 8px rgba(255, 105, 180, 0.5);
+    animation: fadeInWord 0.8s forwards; 
+    animation-delay: var(--delay);
+    opacity: 0; /* 初始隐藏，动画控制透明度 */
 }
 @keyframes orbit {
     0% { transform: translate(-50%, -50%) rotate(var(--deg)) translateX(var(--dist)) rotate(calc(var(--deg) * -1)); }
     100% { transform: translate(-50%, -50%) rotate(calc(var(--deg) + 360deg)) translateX(var(--dist)) rotate(calc(0deg - var(--deg) - 360deg)); }
 }
-@keyframes fadeInWord { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; } }
+@keyframes fadeInWord { 
+    from { opacity: 0; transform: scale(0.6); } 
+    to { opacity: 1; transform: scale(1); } 
+}
 
 /* --- 完结层 --- */
 #ending-overlay {
