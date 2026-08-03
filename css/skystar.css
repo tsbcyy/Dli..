@@ -1,99 +1,31 @@
-* { margin: 0; padding: 0; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 body {
     height: 100vh; display: flex; align-items: center; justify-content: center;
     position: relative; overflow: hidden; background-color: #0b0a1a;
+}
+/* 初始静态背景图 */
+#static-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: url('../img/skystar2.jpg') no-repeat center center;
+    background-size: cover; z-index: -2;
 }
 #videofilm {
     width: 100%; height: 100%; object-fit: cover;
     position: fixed; z-index: -1; top: 0; left: 0;
 }
-#particles-canvas {
-    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    z-index: 0; pointer-events: none;
-}
-
-/* --- 小米手机极限强制居中（修复偏移） --- */
-.textone, .texttwo, .textthree {
-    position: absolute; 
-    width: 100%; 
-    left: 0; /* 强制从最左侧开始 */
-    text-align: center; 
-    z-index: 3;
-    /* 使用 Flex 确保内部 h1 死死固定在水平正中心 */
-    display: flex; justify-content: center;
-}
-.textone { top: 28%; } .texttwo { top: 45%; } .textthree { top: 62%; }
-@media (max-width: 600px) {
-    .textone { top: 25%; } .texttwo { top: 45%; } .textthree { top: 65%; }
-}
-
-h1 {
-    display: inline-block;
-    /* 小米手机上缩小字号，防止文字过长遮挡 */
-    font-size: clamp(14px, 3.5vw, 28px);
-    font-family: '楷体', 'KaiTi', serif;
-    color: #FFB7C5;
-    text-shadow: 0 0 20px rgba(255, 105, 180, 0.6);
-    animation: fadeInTitle 1.5s forwards;
-    animation-delay: 0.2s;
-    opacity: 0;
-    /* 小米窄屏允许自动换行 */
-    white-space: normal; 
-}
-@keyframes fadeInTitle {
-    from { opacity: 0; transform: translateY(8px) scale(0.8); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-/* --- 公转动画（绕屏幕中心旋转） --- */
-.container {
+#particles-canvas, #text-canvas {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    overflow: hidden; z-index: 1; pointer-events: none;
+    pointer-events: none; z-index: 2;
 }
-:root { 
-    --dist: 20vw;      /* 公转半径 */
-    --init-deg: 0deg;  /* 初始角度 */
-    --speed: 10s;      /* 转动速度 */
-    --delay: 0s;       /* 延迟 */
-}
+#particles-canvas { z-index: 1; }
 
-.word-box {
-    position: absolute;
-    top: 50%; left: 50%; /* 锚点定在屏幕正中心 */
-    transform: translate(-50%, -50%);
-    /* 使用 margin 进行小范围上下浮动，让轨道错落有致，避免一圈重叠 */
-    margin-top: var(--margin-top);
-    margin-left: var(--margin-left);
-    /* 核心：绕中心公转的动画 */
-    animation: orbit var(--speed) linear infinite;
-    animation-delay: var(--delay);
-    opacity: 0;
-}
-.word-box .word {
-    position: absolute;
-    color: #BAABDA; font-family: '楷体';
-    /* 逐步浮现动画 */
-    animation: fadeInWord 0.8s forwards;
-    animation-delay: var(--delay);
-}
-
-@keyframes orbit {
-    0% { transform: translate(-50%, -50%) rotate(0deg) translateX(var(--dist)) rotate(0deg); }
-    100% { transform: translate(-50%, -50%) rotate(360deg) translateX(var(--dist)) rotate(-360deg); }
-}
-@keyframes fadeInWord {
-    from { opacity: 0; transform: scale(0.5); }
-    to { opacity: 1; transform: scale(1); }
-}
-
-/* --- 按钮 --- */
 #next-btn {
-    position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%);
+    position: fixed; bottom: 35px; left: 50%; transform: translateX(-50%);
     z-index: 10;
-    padding: 10px 24px; border: 1px solid rgba(255, 183, 197, 0.8);
-    border-radius: 30px; background: rgba(20, 10, 30, 0.6);
-    color: #FFB7C5; font-size: 15px; font-family: '楷体';
+    padding: 12px 28px; border: 1px solid rgba(255, 183, 197, 0.8);
+    border-radius: 30px; background: rgba(20, 10, 30, 0.8);
+    color: #FFB7C5; font-size: 16px; font-family: '楷体';
     backdrop-filter: blur(5px); box-shadow: 0 0 15px rgba(255, 105, 180, 0.3);
-    cursor: pointer; transition: all 0.2s; outline: none;
+    cursor: pointer; transition: all 0.2s; outline: none; letter-spacing: 2px;
 }
 #next-btn:active { transform: translateX(-50%) scale(0.92); }
