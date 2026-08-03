@@ -51,7 +51,7 @@ let isEndingShown = false;
 let autoTimer;
 
 const isMobile = window.innerWidth <= 600;
-const loadManager = { videoReady: false, audioReady: false, wordsReady: false };
+const loadManager = { videoReady: false, audioReady: false, wordsReady: false, isAllReady: false };
 
 // ---------- 4. 尺寸适配 ----------
 function resizeCanvas() {
@@ -103,7 +103,7 @@ function generateParticles(text) {
 // ---------- 7. 动画循环（减小一号：手机2.2px, 电脑3.5px） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
-    const radius = isMobile ? 2.2 : 3.5; // ★ 比之前再小一号
+    const radius = isMobile ? 2.2 : 3.5; 
     particles.forEach(p => {
         const dx = p.tx - p.x, dy = p.ty - p.y;
         if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) { p.x += dx * 0.08; p.y += dy * 0.08; } 
@@ -174,7 +174,6 @@ function showEnding(name, month) {
     endingDynamic.innerHTML = `${name}，愿你${month}月生日的这一天<br>永远被爱包围，岁岁年年`;
     endingOverlay.classList.add('show');
     clearInterval(autoTimer);
-    // 淡出所有元素视效（可选）
 }
 
 // ---------- 12. 点击“开始”触发主流程 ----------
@@ -188,7 +187,6 @@ startBtn.addEventListener('click', function() {
         return;
     }
 
-    // 显示等待状态
     startBtn.style.display = 'none';
     loadingStatus.style.display = 'flex';
 
@@ -200,7 +198,7 @@ startBtn.addEventListener('click', function() {
         }
     }, 300);
 
-    // 15秒保底（极端网络情况也要放行，防止卡死）
+    // 15秒保底
     setTimeout(() => {
         if (!loadManager.isAllReady) {
             clearInterval(waitForLoad);
@@ -210,9 +208,9 @@ startBtn.addEventListener('click', function() {
     }, 15000);
 });
 
-// ---------- 13. 正式主流程（不需要按钮了） ----------
+// ---------- 13. 正式主流程 ----------
 function startMain(name, month) {
-    // 1. 隐藏输入页面，展现主界面
+    // 1. 隐藏输入页，显示主界面
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
     
@@ -220,9 +218,16 @@ function startMain(name, month) {
     initBgParticles();
     generateParticles(titleGroups[0].text);
     animateText();
-    const endText = `${name}，${month}月生日快乐！`;
 
-    // 3. 10秒自动切换
+    // 3. 【核心修复】向浏览器“注册”用户手势权限
+    // 静音启动视频并立即暂停，这样后续再播就不会被拦截
+    video.muted = true;
+    video.play().then(() => video.pause()).catch(()=>{});
+    // 同时也让音频先静音挂起
+    bgMusic.muted = true;
+    bgMusic.play().catch(()=>{});
+
+    // 4. 【改为 8 秒】自动切换
     let index = 0;
     autoTimer = setInterval(() => {
         index++;
@@ -233,11 +238,12 @@ function startMain(name, month) {
             return;
         }
 
-        // 播放三个后（即到了第4个周期时，index === 3）放音乐和视频与悬浮词
+        // 播放三个后（即到了第4个周期时，index === 3）放大招
         if (index === 3) {
             // 触发音乐+视频+悬浮
             video.style.display = 'block';
             video.muted = false;
+            // 此时已经通过手势激活，这里可以正常播放！
             video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
             
             bgMusic.muted = false;
@@ -245,7 +251,7 @@ function startMain(name, month) {
 
             container.style.display = 'block'; // 释放悬浮词
         }
-    }, 10000); // 10秒触发一次
+    }, 8000); // 【修改】改为 8000 毫秒（8秒）
 }
 
 // ---------- 14. 页面启动，后台立刻预加载 ----------
@@ -260,7 +266,7 @@ function preloadAll() {
     bgMusic.addEventListener('canplaythrough', () => { loadManager.audioReady = true; checkAllLoaded(); });
     setTimeout(() => { if(!loadManager.audioReady) { loadManager.audioReady = true; checkAllLoaded(); } }, 8000);
 
-    preloadOrbitWords(); // 内部会触发 wordsReady
+    preloadOrbitWords();
 }
 
 // ---------- 15. 启动 ----------
