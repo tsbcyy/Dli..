@@ -7,42 +7,48 @@
     <link rel="stylesheet" href="css/skystar.css">
   </head>
   <body>
-    <!-- 0. 预加载遮罩层 -->
-    <div id="loading-overlay">
-      <div class="loader-circle"></div>
-      <div class="loading-text">🌙 正在生成专属祝福页面...</div>
-      <div class="loading-sub">为你打造星光璀璨的一刻</div>
+    <!-- 1. 前置表单层（完全遮挡主界面） -->
+    <div id="entry-screen">
+      <div class="entry-box">
+        <div class="entry-title">🌟 专属祝福生成器</div>
+        <div class="entry-sub">为亲爱的TA，定制星光璀璨的一刻</div>
+        
+        <div class="input-group">
+          <label>TA 的昵称</label>
+          <input type="text" id="user-name" placeholder="请输入名字" class="entry-input">
+        </div>
+        <div class="input-group">
+          <label>TA 的生日月份</label>
+          <input type="number" id="user-month" placeholder="1 - 12" min="1" max="12" class="entry-input">
+        </div>
+        
+        <button id="start-btn" class="entry-btn">✨ 开始为她祝福</button>
+        
+        <div id="loading-status" class="entry-loading" style="display:none;">
+          <div class="loader-small"></div>
+          <span>正在准备星光粒子与视频...</span>
+        </div>
+      </div>
     </div>
 
-    <!-- 完结告知层 -->
+    <!-- 2. 主内容层（初始隐藏） -->
+    <div id="main-screen" style="display:none;">
+      <div id="static-bg"></div>
+      <video id="videofilm" poster="img/skystar2.jpg" style="display:none;" muted playsinline webkit-playsinline preload="auto">
+        <source src="video/skystar.mp4" type="video/mp4">
+      </video>
+      <canvas id="particles-canvas"></canvas>
+      <canvas id="text-canvas"></canvas>
+      <audio id="bg-music" src="video/晴天.mp3" muted preload="auto"></audio>
+      <div class="container" style="display:none;"></div>
+    </div>
+
+    <!-- 3. 完结告知层 -->
     <div id="ending-overlay">
       <div class="ending-icon">🎂</div>
       <div class="ending-text">✨ 祝福已全部送达 ✨</div>
-      <div class="ending-sub">愿你永远被爱包围，岁岁年年</div>
+      <div class="ending-sub" id="ending-dynamic">愿你永远被爱包围</div>
     </div>
-
-    <!-- 1. 初始静态背景图片 -->
-    <div id="static-bg"></div>
-
-    <!-- 2. 隐藏的视频背景 -->
-    <video id="videofilm" poster="img/skystar2.jpg" style="display:none;" muted playsinline webkit-playsinline preload="auto">
-      <source src="video/skystar.mp4" type="video/mp4">
-    </video>
-
-    <!-- 3. 粒子特效层 -->
-    <canvas id="particles-canvas"></canvas>
-    
-    <!-- 4. 主标题粒子文字层 -->
-    <canvas id="text-canvas"></canvas>
-
-    <!-- 5. 背景音乐 -->
-    <audio id="bg-music" src="video/晴天.mp3" autoplay loop muted preload="auto"></audio>
-
-    <!-- 6. 悬浮祝福语容器 -->
-    <div class="container" style="display:none;"></div>
-
-    <!-- 7. 按钮 -->
-    <button id="next-btn" style="display:none;">🌸 换一句</button>
 
     <script src="js/skystar.js"></script>
   </body>
