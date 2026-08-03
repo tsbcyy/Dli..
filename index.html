@@ -2,33 +2,27 @@
 <html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>生日快乐，愿你岁岁常欢愉</title>
     <link rel="stylesheet" href="css/skystar.css">
   </head>
   <body>
-    <!-- 视频背景 -->
     <video id="videofilm" poster="img/skystar2.jpg" autoplay muted loop playsinline>
       <source src="video/skystar.mp4" type="video/mp4">
     </video>
-    
-    <!-- 增加粉色粒子 Canvas -->
     <canvas id="particles-canvas"></canvas>
 
-    <div class="textone">
-      <h1>生日快乐</h1>
-    </div>
-    <div class="texttwo">
-      <h1>愿你岁岁常欢愉</h1>
-    </div>
-    <div class="textthree">
-      <h1>年年皆胜意</h1>
-    </div>
+    <div class="textone"><h1>生日快乐</h1></div>
+    <div class="texttwo"><h1>愿你岁岁常欢愉</h1></div>
+    <div class="textthree"><h1>年年皆胜意</h1></div>
 
     <audio src="video/晴天.mp3" autoplay loop muted></audio>
     
     <div class="container"></div>
+
+    <!-- 新增换页按钮 -->
+    <button id="next-btn">🌸 换一批祝福</button>
+    
     <script src="js/skystar.js"></script>
   </body>
 </html>
