@@ -12,7 +12,7 @@ const titleGroups = [
     { text: "祝你生日快乐\n未来可期\n不负心中热爱" }
 ];
 
-// ---------- 2. 公转祝福语（28句悬浮词） ----------
+// ---------- 2. 公转祝福语（28句） ----------
 var orbitWords = [
     '生日快乐', '万事胜意', '平安喜乐', '前程似锦', '岁岁常欢愉',
     '年年皆胜意', '未来可期', '所愿皆成真', '多喜乐，长安宁',
@@ -42,7 +42,7 @@ const endingOverlay = document.getElementById('ending-overlay');
 
 let W, H, particles = [], bgParticles = [];
 let clickCount = 0;
-let switchCount = 0; // 记录当前显示到第几句（0~9）
+let switchCount = 0;
 let isEndingShown = false;
 const isMobile = window.innerWidth <= 600;
 
@@ -53,7 +53,7 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ---------- 5. 极致粒子提取（强制 step = 1） ----------
+// ---------- 5. 极致粒子提取（保留 step = 1） ----------
 function getTextPoints(text) {
     const fontSize = Math.min(W * 0.08, 40);
     const lineHeight = fontSize * 1.3;
@@ -71,7 +71,7 @@ function getTextPoints(text) {
     const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
     const data = imageData.data;
     const points = [];
-    const step = 1; // 坚决不改：每个像素都采样
+    const step = 1; // 绝对保留 step=1 的极致细化
     for (let y = 0; y < offCanvas.height; y += step) {
         for (let x = 0; x < offCanvas.width; x += step) {
             const idx = (y * offCanvas.width + x) * 4;
@@ -99,10 +99,12 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环（大号清晰粒子，无阴影） ----------
+// ---------- 7. 动画循环（粒子调小一号） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
-    const radius = isMobile ? 4.0 : 5.5; // 手机端 4px，保证清晰可见
+    // 【核心修改】粒子尺寸调小一号：
+    // 之前手机 4.0px，电脑 5.5px；现在手机 3.0px，电脑 4.5px
+    const radius = isMobile ? 3.0 : 4.5; 
     particles.forEach(p => {
         const dx = p.tx - p.x, dy = p.ty - p.y;
         if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
@@ -137,15 +139,17 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 9. 【核心修复】提前预加载悬浮祝福语（隐藏状态） ----------
+// ---------- 9. 预加载悬浮祝福语（隐藏状态建好） ----------
 function preloadOrbitWords() {
-    // 清空旧数据（如果有残留），但保持容器隐藏
     container.innerHTML = '';
-    // 容器默认在HTML中已设置 display:none，这里不要改
-
     let index = 0;
     function appendWord() {
-        if (index >= orbitWords.length) return;
+        if (index >= orbitWords.length) {
+            // 悬浮词全部生成完毕，通知加载管理器
+            loadManager.wordsReady = true;
+            checkAllLoaded();
+            return;
+        }
         let w = orbitWords[index];
         let word_box = document.createElement('div');
         let word = document.createElement('div');
@@ -168,13 +172,12 @@ function preloadOrbitWords() {
         word_box.appendChild(word); 
         container.appendChild(word_box);
         index++;
-        // 依然使用 300ms 间隔逐步生成，但因为是隐藏状态，用户感知不到
         setTimeout(appendWord, 300);
     }
     appendWord();
 }
 
-// ---------- 10. 触发切换与完结逻辑 ----------
+// ---------- 10. 切换与完结逻辑 ----------
 function triggerSwitch() {
     if (isEndingShown) return;
     if (switchCount < titleGroups.length - 1) {
@@ -184,8 +187,6 @@ function triggerSwitch() {
         showEnding();
     }
 }
-
-// ---------- 11. 完结页面 ----------
 function showEnding() {
     if (isEndingShown) return;
     isEndingShown = true;
@@ -194,17 +195,16 @@ function showEnding() {
     clearInterval(autoTimer);
 }
 
-// ---------- 12. 按钮交互（第4次触发视频+显示悬浮词） ----------
+// ---------- 11. 按钮交互 ----------
 btn.addEventListener('click', function() {
     if (isEndingShown) return;
     if (bgMusic.muted) bgMusic.muted = false;
 
     clickCount++;
-    triggerSwitch(); // 切换主标题粒子文字
+    triggerSwitch();
 
-    // 第4次点击时触发大招
+    // 第4次点击触发大招
     if (clickCount >= 3) { 
-        // 1. 播放视频
         video.style.display = 'block';
         video.muted = false;
         video.play().then(() => {
@@ -213,42 +213,81 @@ btn.addEventListener('click', function() {
             video.style.display = 'none';
             staticBg.style.display = 'block';
         });
-
-        // 2. 【关键】释放预先加载的悬浮祝福语！
-        // 因为它们早已在后台建好，此刻只需解除隐藏，动画瞬间触发！
+        // 释放悬浮祝福语
         container.style.display = 'block'; 
     }
 });
 
-// ---------- 13. 极速加载与自动切换 ----------
+// ---------- 12. 【核心修改】强制完全加载进度管理器 ----------
+// 定义加载状态
+const loadManager = {
+    videoReady: false,
+    audioReady: false,
+    wordsReady: false
+};
+
 let autoTimer;
 
-function preloadAll() {
-    video.muted = true; video.load();
-    video.play().then(() => video.pause()).catch(()=>{});
-
-    initBgParticles();
-    generateParticles(titleGroups[0].text);
-    bgMusic.muted = true; bgMusic.play().catch(()=>{});
-
-    // 【重点】立刻在后台预构建悬浮祝福语，但保持隐藏
-    preloadOrbitWords();
-
-    setTimeout(() => {
+// 检查是否所有资源都已加载完毕
+function checkAllLoaded() {
+    if (loadManager.videoReady && loadManager.audioReady && loadManager.wordsReady) {
+        // 全部加载完毕，关闭加载页，显示按钮！
         overlay.classList.add('fade-out');
         setTimeout(() => { 
             overlay.style.display = 'none'; 
             btn.style.display = 'block'; 
         }, 800);
-    }, 600);
 
-    // 20秒自动切换下一句
-    autoTimer = setInterval(() => {
-        if (!isEndingShown) triggerSwitch();
-    }, 20000);
+        // 开始20秒自动切换
+        autoTimer = setInterval(() => {
+            if (!isEndingShown) triggerSwitch();
+        }, 20000);
+    }
 }
 
-// ---------- 14. 启动 ----------
+// 初始化加载流程
+function initLoad() {
+    // 1. 渲染粒子（立即执行）
+    initBgParticles();
+    generateParticles(titleGroups[0].text);
+    // 2. 预构建悬浮祝福语（会触发 wordsReady = true）
+    preloadOrbitWords();
+
+    // 3. 监听视频加载完毕（`canplaythrough` 表示已缓冲完整，可流畅播放）
+    video.addEventListener('canplaythrough', function() {
+        loadManager.videoReady = true;
+        checkAllLoaded();
+    });
+    // 视频加载失败或卡死时的保底（10秒后强制释放）
+    setTimeout(() => {
+        if (!loadManager.videoReady) {
+            console.warn('视频加载超时，强制释放');
+            loadManager.videoReady = true;
+            checkAllLoaded();
+        }
+    }, 10000);
+
+    // 4. 监听音频加载完毕
+    bgMusic.addEventListener('canplaythrough', function() {
+        loadManager.audioReady = true;
+        checkAllLoaded();
+    });
+    // 音频加载保底（8秒）
+    setTimeout(() => {
+        if (!loadManager.audioReady) {
+            loadManager.audioReady = true;
+            checkAllLoaded();
+        }
+    }, 8000);
+
+    // 5. 静默唤起预加载（不打断正常等待）
+    video.muted = true; video.load();
+    video.play().then(() => video.pause()).catch(()=>{});
+    bgMusic.muted = true; bgMusic.load();
+    bgMusic.play().catch(()=>{});
+}
+
+// ---------- 13. 启动 ----------
 resizeCanvas();
-animateText(); 
-preloadAll();
+animateText();
+initLoad();
