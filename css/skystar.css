@@ -5,7 +5,6 @@ html, body {
 }
 body { display: flex; align-items: center; justify-content: center; position: relative; }
 
-/* --- 前置输入页 --- */
 #entry-screen {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
     background: radial-gradient(circle at center, #1a0b1e, #0a0410);
@@ -35,7 +34,6 @@ body { display: flex; align-items: center; justify-content: center; position: re
 .entry-loading { display: flex; align-items: center; justify-content: center; margin-top: 15px; color: #FFB7C5; font-size: 14px; gap: 10px; }
 .loader-small { width: 18px; height: 18px; border: 2px solid rgba(255, 183, 197, 0.2); border-top: 2px solid #FFB7C5; border-radius: 50%; animation: spin 1s linear infinite; }
 
-/* --- 主界面 --- */
 #main-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }
 #static-bg {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -49,51 +47,30 @@ body { display: flex; align-items: center; justify-content: center; position: re
 }
 #particles-canvas { position: absolute; z-index: 1; pointer-events: none; }
 
-/* --- 主标题逐字显现 --- */
 #main-title {
-    position: absolute; 
-    top: 40%; left: 50%; 
-    transform: translate(-50%, -50%);
-    z-index: 4; 
-    pointer-events: none;
-    text-align: center;
-    width: 90%;
+    position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%);
+    z-index: 4; pointer-events: none; text-align: center; width: 90%;
     font-size: clamp(24px, 5vw, 40px);
-    color: #FFB7C5;
-    text-shadow: 0 0 30px #FFB7C5, 0 0 50px #FFB7C5;
-    line-height: 1.6;
+    color: #FFB7C5; text-shadow: 0 0 30px #FFB7C5, 0 0 50px #FFB7C5; line-height: 1.6;
 }
 .main-title .char {
-    display: inline-block;
-    opacity: 0;
+    display: inline-block; opacity: 0;
     transform: translateY(20px) scale(0.5) rotateY(-30deg);
     transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
-.main-title .char.active {
-    opacity: 1;
-    transform: translateY(0) scale(1) rotateY(0deg);
-}
+.main-title .char.active { opacity: 1; transform: translateY(0) scale(1) rotateY(0deg); }
 
-/* --- 悬浮祝福语容器（JS驱动） --- */
+/* 容器只负责定位，所有显示由JS控制 */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     overflow: hidden; z-index: 5; pointer-events: none;
-    /* 默认隐藏 */
-    display: none; 
 }
-/* 只要加上这个class就强制展示，不再依赖别的 */
-.container.show {
-    display: block !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-}
+.container.show { display: block !important; opacity: 1 !important; visibility: visible !important; }
 .word-box .word {
-    position: absolute;
-    color: #BAABDA; font-family: '楷体';
+    position: absolute; color: #BAABDA; font-family: '楷体';
     text-shadow: 0 0 8px rgba(255, 105, 180, 0.4);
 }
 
-/* --- 完结层 --- */
 #ending-overlay {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
