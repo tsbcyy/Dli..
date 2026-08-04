@@ -55,7 +55,7 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ---------- 5. 粒子提取（【修正】强制回到 step=1，保证笔画饱满清晰） ----------
+// ---------- 5. 粒子提取（保持 step=1） ----------
 function getTextPoints(text) {
     const fontSize = Math.min(W * 0.08, 40);
     const lineHeight = fontSize * 1.3;
@@ -72,8 +72,7 @@ function getTextPoints(text) {
     const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
     const data = imageData.data;
     const points = [];
-    // 【核心修改】强制 step=1，像素级取样，文字绝对清晰！
-    const step = 1; 
+    const step = 1; // 【保持】step=1 不变
     for (let y = 0; y < offCanvas.height; y += step) {
         for (let x = 0; x < offCanvas.width; x += step) {
             const idx = (y * offCanvas.width + x) * 4;
@@ -96,12 +95,11 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环（【修正】粒子半径调大，保证清晰可见） ----------
+// ---------- 7. 动画循环（【精准修改】手机端粒子大小调为 2.0px） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
-    // 【核心修改】手机端从 2.0 调回 2.5px，电脑端从 3.0 调回 4.0px
-    // 在 step=1 的高密度下，2.5px 能形成极好的发光“星尘”效果，绝不太密，且字迹清晰！
-    const radius = isMobile ? 2.5 : 4.0; 
+    // 【修改】手机端设为 2.0px，电脑端设为 3.5px 兼顾清晰度
+    const radius = isMobile ? 2.0 : 3.5; 
     textCtx.shadowColor = '#FFB7C5';
     textCtx.shadowBlur = 6; 
     particles.forEach(p => {
@@ -136,7 +134,7 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 9. 预加载悬浮词（范围保持 30-45vw，向外扩散） ----------
+// ---------- 9. 预加载悬浮词（【精准修改】公转半径拉到 35-50vw） ----------
 function preloadRandomWords() {
     container.innerHTML = '';
     let f = document.createDocumentFragment();
@@ -147,8 +145,8 @@ function preloadRandomWords() {
         word.style.fontSize = isMobile ? '14px' : '18px'; 
         word.style.color = '#FFB7C5';
         word_box.classList.add('word-box');
-        // 【核心修改】半径范围维持在 30-45vw
-        let dist = randomNum(30, 45) + 'vw'; 
+        // 【修改】范围从 30-45 拉大到 35-50，扩散更远
+        let dist = randomNum(35, 50) + 'vw'; 
         let deg = (index * 15) + 'deg'; 
         let speed = randomNum(15, 25) + 's'; 
         let delay = (0.2 + index * 0.15) + 's'; 
@@ -235,11 +233,9 @@ function startMain(name, month) {
     generateParticles(titleGroups[0].text);
     animateText();
 
-    // 唤醒视频手势
     video.muted = true;
     video.play().catch(()=>{});
     
-    // 【音乐】一进主界面（点击开始后）即取消静音，正常播放
     bgMusic.muted = false;
     bgMusic.play().catch(()=>{});
 
@@ -253,7 +249,6 @@ function startMain(name, month) {
             return;
         }
 
-        // 第4句话（index===3）时触发大招
         if (index === 3) {
             video.style.display = 'block';
             video.muted = false;
@@ -264,12 +259,11 @@ function startMain(name, month) {
     }, 5000);
 }
 
-// ---------- 15. 页面启动（【音乐】一打开就静音播放，用户手势解除静音） ----------
+// ---------- 15. 页面启动（保持不变） ----------
 function preloadAll() {
     preloadVideoStandard();
     preloadRandomWords();
 
-    // 【音乐】一进页面立即静音播放（符合浏览器政策），等待用户点击开始后取消静音
     bgMusic.muted = true; 
     bgMusic.play().catch(()=>{});
     bgMusic.addEventListener('canplaythrough', () => { loadManager.audioReady = true; checkAllLoaded(); });
