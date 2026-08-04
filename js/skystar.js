@@ -43,13 +43,14 @@ const userNameInput = document.getElementById('user-name');
 const userMonthInput = document.getElementById('user-month');
 const endingDynamic = document.getElementById('ending-dynamic');
 
-// 获取多余的HTML标题节点（用于强制移除）
+// 移除多余的HTML标题节点
 const textone = document.querySelector('.textone');
 const texttwo = document.querySelector('.texttwo');
 const textthree = document.querySelector('.textthree');
 
-let W, H, particles = [], bgParticles = [];
+let W, H, bgParticles = [];
 let switchCount = 0, isEndingShown = false, autoTimer;
+let currentMainText = ""; // 存储当前要显示的主标题
 const isMobile = window.innerWidth <= 600;
 const loadManager = { videoReady: false, audioReady: false, wordsReady: false, isAllReady: false };
 
@@ -60,68 +61,50 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ---------- 5. 粒子提取（【修改】step 改为 2，降低密度） ----------
-function getTextPoints(text) {
-    const fontSize = Math.min(W * 0.08, 40);
-    const lineHeight = fontSize * 1.3;
-    const lines = text.split('\n');
-    const offCanvas = document.createElement('canvas');
-    offCanvas.width = W * 0.9; offCanvas.height = H * 0.6;
-    const offCtx = offCanvas.getContext('2d');
-    offCtx.fillStyle = '#fff';
-    offCtx.font = `${fontSize}px '楷体', 'KaiTi', serif`;
-    offCtx.textAlign = 'center'; offCtx.textBaseline = 'middle';
-    const startY = (offCanvas.height - lines.length * lineHeight) / 2 + lineHeight / 2;
-    lines.forEach((line, index) => offCtx.fillText(line, offCanvas.width / 2, startY + index * lineHeight));
-
-    const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
-    const data = imageData.data;
-    const points = [];
-    // 【核心修改】step = 2，比1.5更稀疏，进一步减轻手机负担
-    const step = 2; 
-    for (let y = 0; y < offCanvas.height; y += step) {
-        for (let x = 0; x < offCanvas.width; x += step) {
-            const idx = (y * offCanvas.width + x) * 4;
-            if (data[idx + 3] > 128) points.push({ tx: (x / offCanvas.width) * W, ty: (y / offCanvas.height) * H });
-        }
-    }
-    return points;
+// ---------- 5. 【特效核心】更新主标题内容 ----------
+function updateMainText(text) {
+    currentMainText = text;
 }
 
-// ---------- 6. 生成主标题 ----------
-function generateParticles(text) {
-    const newPoints = getTextPoints(text);
-    while (particles.length < newPoints.length) {
-        particles.push({ x: Math.random() * W, y: Math.random() * H, tx: 0, ty: 0, color: `hsla(${330 + Math.random() * 30}, 80%, ${65 + Math.random() * 25}%, 0.9)` });
-    }
-    particles.splice(newPoints.length);
-    particles.forEach((p, i) => {
-        p.tx = newPoints[i].tx; p.ty = newPoints[i].ty;
-        if (!p.animStart) { p.x = Math.random() * W; p.y = Math.random() * H; }
-    });
-}
-
-// ---------- 7. 动画循环（【修改】粒子大小调小） ----------
+// ---------- 6. 【特效核心】绘制渐变发光字（取代粒子） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
-    // 【核心修改】手机端从 2.5px 降为 2.0px，电脑端从 4.0px 降为 3.0px
-    const radius = isMobile ? 2.0 : 3.0; 
-    textCtx.shadowColor = '#FFB7C5';
-    textCtx.shadowBlur = 6;
     
-    particles.forEach(p => {
-        const dx = p.tx - p.x, dy = p.ty - p.y;
-        if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) { 
-            p.x += dx * 0.08; 
-            p.y += dy * 0.08; 
-        } else { p.x = p.tx; p.y = p.ty; }
-        textCtx.beginPath(); textCtx.arc(p.x, p.y, radius, 0, Math.PI * 2);
-        textCtx.fillStyle = p.color; textCtx.fill();
+    if (!currentMainText) {
+        requestAnimationFrame(animateText);
+        return;
+    }
+
+    // 设置字体大小（手机端稍小，适应屏幕）
+    const fontSize = Math.min(W * 0.07, 40);
+    textCtx.font = `${fontSize}px '楷体', 'KaiTi', serif`;
+    textCtx.textAlign = 'center';
+    textCtx.textBaseline = 'middle';
+
+    // 1. 设置粉色发光（文字背后的柔和光晕）
+    textCtx.shadowColor = '#FFB7C5';
+    textCtx.shadowBlur = 25;
+
+    // 2. 创建粉-白渐变，让文字色彩更有层次
+    const gradient = textCtx.createLinearGradient(0, H/2 - 100, 0, H/2 + 100);
+    gradient.addColorStop(0, '#FFB7C5'); // 顶部粉红
+    gradient.addColorStop(0.5, '#FFC0CB'); // 中间亮粉
+    gradient.addColorStop(1, '#E8F9FD'); // 底部白粉
+    textCtx.fillStyle = gradient;
+
+    // 3. 直接绘制整段文字（支持换行）
+    const lines = currentMainText.split('\n');
+    const lineHeight = fontSize * 1.4;
+    const startY = (H - lines.length * lineHeight) / 2 + lineHeight / 2;
+    
+    lines.forEach((line, index) => {
+        textCtx.fillText(line, W / 2, startY + index * lineHeight);
     });
+
     requestAnimationFrame(animateText);
 }
 
-// ---------- 8. 背景小粒子 ----------
+// ---------- 7. 背景小粒子（保留氛围点缀） ----------
 function initBgParticles() {
     bgParticles = [];
     for (let i = 0; i < 40; i++) {
@@ -143,7 +126,7 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 9. 预加载悬浮词（半径 45-60vw） ----------
+// ---------- 8. 预加载悬浮词（半径 45-60vw） ----------
 function preloadRandomWords() {
     container.innerHTML = '';
     let f = document.createDocumentFragment();
@@ -170,7 +153,7 @@ function preloadRandomWords() {
     checkAllLoaded();
 }
 
-// ---------- 10. 视频无声下载 ----------
+// ---------- 9. 视频无声下载 ----------
 function preloadVideoStandard() {
     video.src = 'video/skystar.mp4';
     video.load();
@@ -189,14 +172,14 @@ function preloadVideoStandard() {
     }, 20000);
 }
 
-// ---------- 11. 加载完成检查 ----------
+// ---------- 10. 加载完成检查 ----------
 function checkAllLoaded() {
     if (loadManager.videoReady && loadManager.audioReady && loadManager.wordsReady) {
         loadManager.isAllReady = true;
     }
 }
 
-// ---------- 12. 大结局 ----------
+// ---------- 11. 大结局 ----------
 function showEnding(name, month) {
     if (isEndingShown) return;
     isEndingShown = true;
@@ -205,7 +188,7 @@ function showEnding(name, month) {
     clearInterval(autoTimer);
 }
 
-// ---------- 13. 开始按钮 ----------
+// ---------- 12. 开始按钮 ----------
 startBtn.addEventListener('click', function() {
     const name = userNameInput.value.trim() || '亲爱的';
     const month = userMonthInput.value.trim() || '每一';
@@ -232,19 +215,20 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 14. 主流程（保留彻底删除多余HTML节点的逻辑） ----------
+// ---------- 13. 主流程 ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
 
-    // 彻底从DOM中移除那三个多余的标题容器，确保永不残留
+    // 彻底清除多余的HTML标题节点
     if (textone) textone.remove();
     if (texttwo) texttwo.remove();
     if (textthree) textthree.remove();
 
     initBgParticles();
-    generateParticles(titleGroups[0].text);
-    animateText();
+    // 显示第一句主标题
+    updateMainText(titleGroups[0].text);
+    // 启动绘制循环（已通过 animateText 持续运行）
 
     // 音乐取消静音
     bgMusic.muted = false;
@@ -258,7 +242,7 @@ function startMain(name, month) {
     autoTimer = setInterval(() => {
         index++;
         if (index < titleGroups.length) {
-            generateParticles(titleGroups[index].text);
+            updateMainText(titleGroups[index].text);
         } else {
             showEnding(name, month);
             return;
@@ -279,7 +263,7 @@ function startMain(name, month) {
     }, 5000);
 }
 
-// ---------- 15. 页面启动 ----------
+// ---------- 14. 页面启动 ----------
 function preloadAll() {
     preloadVideoStandard();
     preloadRandomWords();
@@ -287,9 +271,12 @@ function preloadAll() {
     bgMusic.addEventListener('canplaythrough', () => { loadManager.audioReady = true; checkAllLoaded(); });
     if (bgMusic.readyState >= 4) { loadManager.audioReady = true; checkAllLoaded(); }
     setTimeout(() => { if(!loadManager.audioReady) { loadManager.audioReady = true; checkAllLoaded(); } }, 8000);
+    
+    // 预先启动动画循环
+    animateText();
 }
 
-// ---------- 16. 启动 ----------
+// ---------- 15. 启动 ----------
 resizeCanvas();
 preloadAll();
 
