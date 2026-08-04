@@ -9,41 +9,38 @@
     <link rel="stylesheet" href="css/skystar.css">
   </head>
   <body>
-    <!-- 1. 前置输入页 -->
     <div id="entry-screen">
       <div class="entry-box">
-        <div class="entry-title">🌟 专属祝福</div>
-        <div class="entry-sub">定制星光璀璨的一刻</div>
+        <div class="entry-title">🌟 专属祝福生成器</div>
+        <div class="entry-sub">为亲爱的TA，定制星光璀璨的一刻</div>
         <div class="input-group">
-          <label>你的昵称</label>
+          <label>TA 的昵称</label>
           <input type="text" id="user-name" placeholder="请输入名字" class="entry-input">
         </div>
         <div class="input-group">
-          <label>你的生日月份</label>
+          <label>TA 的生日月份</label>
           <input type="number" id="user-month" placeholder="1 - 12" min="1" max="12" class="entry-input">
         </div>
-        <button id="start-btn" class="entry-btn">✨开始为祝福</button>
+        <button id="start-btn" class="entry-btn">✨ 开始为她祝福</button>
         <div id="loading-status" class="entry-loading" style="display:none;">
           <div class="loader-small"></div>
-          <span>正在生成专属祝福视频...</span>
+          <span>正在加载星空与旋律...</span>
         </div>
       </div>
     </div>
 
-    <!-- 2. 主内容层 -->
     <div id="main-screen" style="display:none;">
       <div id="static-bg"></div>
-      <!-- 加上了 preload="auto" 让浏览器尽早下载 -->
       <video id="videofilm" poster="img/skystar2.jpg" loop style="display:none;" muted playsinline webkit-playsinline x5-video-player-type="h5" x5-video-player-fullscreen="true" preload="auto">
         <source src="video/skystar.mp4" type="video/mp4">
       </video>
       <canvas id="particles-canvas"></canvas>
       <canvas id="text-canvas"></canvas>
-      <audio id="bg-music" src="video/晴天.mp3" muted preload="auto"></audio>
+      <!-- 重点：audio 标签加上 autoplay muted，一打开页面就静音播放 -->
+      <audio id="bg-music" src="video/晴天.mp3" autoplay muted preload="auto"></audio>
       <div class="container" style="display:none;"></div>
     </div>
 
-    <!-- 3. 完结页 -->
     <div id="ending-overlay">
       <div class="ending-icon">🎂</div>
       <div class="ending-text">✨ 祝福已全部送达 ✨</div>
