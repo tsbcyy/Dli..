@@ -111,7 +111,8 @@ function preloadRandomWords() {
         word.style.fontSize = isMobile ? '14px' : '18px'; 
         word.style.color = '#FFB7C5';
         word_box.classList.add('word-box');
-        let dist = randomNum(45, 60) + 'vw'; 
+        // 【修改】悬浮祝福语半径从 45-60 调整为 30-50
+        let dist = randomNum(30, 50) + 'vw'; 
         let deg = (index * 15) + 'deg'; 
         let speed = randomNum(15, 25) + 's'; 
         let delay = (0.2 + index * 0.15) + 's'; 
