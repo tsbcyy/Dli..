@@ -49,7 +49,7 @@ body { display: flex; align-items: center; justify-content: center; position: re
 }
 #particles-canvas { position: absolute; z-index: 1; pointer-events: none; }
 
-/* ---【主标题】粉色发光 + 逐字跃入特效 --- */
+/* --- 主标题逐字显现特效 --- */
 #main-title {
     position: absolute; 
     top: 40%; left: 50%; 
@@ -63,7 +63,6 @@ body { display: flex; align-items: center; justify-content: center; position: re
     text-shadow: 0 0 30px #FFB7C5, 0 0 50px #FFB7C5;
     line-height: 1.6;
 }
-
 .main-title .char {
     display: inline-block;
     opacity: 0;
@@ -75,17 +74,13 @@ body { display: flex; align-items: center; justify-content: center; position: re
     transform: translateY(0) scale(1) rotateY(0deg);
 }
 
-/* --- 悬浮祝福语 (修复QQ浏览器显示崩溃) --- */
+/* --- 悬浮祝福语 --- */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     overflow: hidden; z-index: 5; pointer-events: none;
-    /* 默认隐藏，QQ浏览器对 display 特别敏感 */
-    display: none; 
+    display: none;
 }
-.container.show {
-    /* 核心修复：加 !important 强制打破浏览器的懒渲染 */
-    display: block !important; 
-}
+.container.show { display: block !important; }
 :root { --dist: 20vw; --deg: 0deg; --speed: 10s; --delay: 0s; }
 .word-box {
     position: absolute; top: 50%; left: 50%;
