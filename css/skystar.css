@@ -75,10 +75,16 @@ body { display: flex; align-items: center; justify-content: center; position: re
     transform: translateY(0) scale(1) rotateY(0deg);
 }
 
-/* --- 悬浮祝福语 --- */
+/* --- 悬浮祝福语 (修复QQ浏览器显示崩溃) --- */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-    overflow: hidden; z-index: 5; pointer-events: none; display: none;
+    overflow: hidden; z-index: 5; pointer-events: none;
+    /* 默认隐藏，QQ浏览器对 display 特别敏感 */
+    display: none; 
+}
+.container.show {
+    /* 核心修复：加 !important 强制打破浏览器的懒渲染 */
+    display: block !important; 
 }
 :root { --dist: 20vw; --deg: 0deg; --speed: 10s; --delay: 0s; }
 .word-box {
