@@ -28,7 +28,7 @@ function randomNum(min, max) { return (Math.random() * (max - min + 1) + min).to
 // ---------- 3. DOM 元素 ----------
 const video = document.getElementById('videofilm');
 const bgMusic = document.getElementById('bg-music');
-const container = document.querySelector('.container'); // 悬浮词容器
+const container = document.querySelector('.container');
 const staticBg = document.getElementById('static-bg');
 const endingOverlay = document.getElementById('ending-overlay');
 const entryScreen = document.getElementById('entry-screen');
@@ -40,7 +40,7 @@ const userMonthInput = document.getElementById('user-month');
 const endingDynamic = document.getElementById('ending-dynamic');
 const mainTitleEl = document.getElementById('main-title');
 
-// 移除旧HTML三行标题
+// 移除旧HTML三行标题（仅防万一）
 document.querySelectorAll('.textone, .texttwo, .textthree').forEach(el => el.remove());
 
 let switchCount = 0, isEndingShown = false, autoTimer, charInterval = null;
@@ -96,13 +96,13 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 6. 【核心修复】生成并强制显示悬浮词 ----------
+// ---------- 6. 预加载悬浮词 ----------
 function preloadRandomWords() {
     if (!container) return;
     container.innerHTML = '';
-    // 在生成前就强制清空所有可能的干扰样式
-    container.style.cssText = 'display: none !important;'; 
-    
+    // 预先确保它是隐藏的，等待触发
+    container.style.display = 'none';
+    container.classList.remove('show');
     let f = document.createDocumentFragment();
     words.forEach((w, index) => {
         let word_box = document.createElement('div');
@@ -195,7 +195,7 @@ function startMain(name, month) {
     initBgParticles();
     updateTitle(titleGroups[0].text);
     
-    // 音乐取消静音（不动您满意的代码）
+    // 音乐取消静音
     bgMusic.muted = false;
     bgMusic.play().catch(() => {
         bgMusic.muted = true;
@@ -226,28 +226,15 @@ function startMain(name, month) {
                 }, 500);
             }
             
-           // 【终极绝杀】强制显示所有悬浮词的 DOM，不管三七二十一
+            // 【核心强制显示悬浮词】
             if (container) {
-                // 1. 强制让容器可见
+                // 1. 直接覆盖所有样式，强制显示
                 container.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; z-index: 9999 !important;';
-                
-                // 2. 强制让容器里每一个 word-box 及其内部的 word 都可见并触发动画
-                const boxes = container.querySelectorAll('.word-box');
-                boxes.forEach((box, index) => {
-                    box.style.cssText = 'opacity: 1 !important; visibility: visible !important;';
-                    // 如果动画没启动，强行触发
-                    const word = box.querySelector('.word');
-                    if (word) {
-                        word.style.cssText = 'opacity: 1 !important; visibility: visible !important;';
-                        // 重新设置 animation 属性，强制重启动画
-                        const speed = box.style.getPropertyValue('--speed') || '15s';
-                        const delay = box.style.getPropertyValue('--delay') || '0s';
-                        box.style.animation = 'none';
-                        box.offsetHeight; // 强制回流
-                        box.style.animation = `orbit ${speed} linear infinite ${delay}`;
-                    }
-                });
-                console.log('✅ 悬浮词已强行显示，数量：' + boxes.length);
+                // 2. 添加 show 类，触发 CSS 动画
+                setTimeout(() => {
+                    container.classList.add('show');
+                    console.log('✅ 悬浮词已触发显示');
+                }, 50);
             }
         }
     }, 5000);
@@ -258,7 +245,7 @@ function preloadAll() {
     preloadVideoStandard();
     preloadRandomWords();
     
-    // 音乐播放逻辑（保持您满意的原样）
+    // 音乐开始就尝试播放
     bgMusic.muted = false;
     bgMusic.play().then(() => {
         loadManager.audioReady = true; 
@@ -284,7 +271,7 @@ function preloadAll() {
 resizeCanvas();
 preloadAll();
 
-// 触摸屏幕强制激活音乐（保持您满意的原样）
+// 触摸屏幕强制激活音乐
 document.addEventListener('touchstart', function ensureAudio() {
     if (bgMusic.muted) {
         bgMusic.muted = false;
