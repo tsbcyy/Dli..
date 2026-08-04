@@ -39,6 +39,7 @@ const userNameInput = document.getElementById('user-name');
 const userMonthInput = document.getElementById('user-month');
 const endingDynamic = document.getElementById('ending-dynamic');
 const mainTitleEl = document.getElementById('main-title');
+const forceBtn = document.getElementById('force-show-btn'); // 手动触发按钮
 
 // 移除旧HTML三行标题
 document.querySelectorAll('.textone, .texttwo, .textthree').forEach(el => el.remove());
@@ -103,7 +104,6 @@ function initBgParticles() {
 function preloadRandomWords() {
     if (!container) return;
     container.innerHTML = '';
-    // 清除之前的动画
     if (floatAnimId) cancelAnimationFrame(floatAnimId);
     floatingItems = [];
 
@@ -118,14 +118,11 @@ function preloadRandomWords() {
         el.style.textShadow = '0 0 8px rgba(255,105,180,0.6)';
         el.style.transform = 'translate(-50%, -50%)';
         el.innerText = w;
-        // 初始透明度0，等下淡入
         el.style.opacity = 0;
-        // 随机半径 30-50 vw
         let dist = parseFloat(randomNum(30, 50));
-        let deg = index * 15; // 初始角度
-        let speed = parseFloat(randomNum(15, 25)); // 秒转一圈
-        let delay = 0.2 + index * 0.15; // 延迟淡入
-        // 添加到容器
+        let deg = index * 15;
+        let speed = parseFloat(randomNum(15, 25));
+        let delay = 0.2 + index * 0.15;
         container.appendChild(el);
         floatingItems.push({ el, dist, deg, speed, delay, startTime: Date.now() + delay * 1000 });
     });
@@ -143,11 +140,9 @@ function animateFloating() {
     const now = Date.now();
     floatingItems.forEach(item => {
         if (now < item.startTime) {
-            // 还没到显示时间
             item.el.style.opacity = 0;
             return;
         }
-        // 淡入
         if (item.el.style.opacity !== '1') {
             item.el.style.opacity = 1;
         }
@@ -156,7 +151,6 @@ function animateFloating() {
         let rad = angle * Math.PI / 180;
         let x = Math.cos(rad) * item.dist;
         let y = Math.sin(rad) * item.dist;
-        // 使用 vw 和 vh 单位，保证自适应
         item.el.style.transform = `translate(-50%, -50%) translate(${x}vw, ${y}vh)`;
     });
     floatAnimId = requestAnimationFrame(animateFloating);
@@ -197,7 +191,16 @@ function showEnding(name, month) {
     clearInterval(autoTimer);
 }
 
-// ---------- 11. 开始按钮 ----------
+// ---------- 11. 手动触发悬浮词（供测试） ----------
+function forceShowFloating() {
+    if (container) {
+        container.style.display = 'block';
+        if (!floatAnimId) animateFloating();
+        forceBtn.style.display = 'none'; // 触发后隐藏按钮
+    }
+}
+
+// ---------- 12. 开始按钮 ----------
 startBtn.addEventListener('click', function() {
     const name = userNameInput.value.trim() || '亲爱的';
     const month = userMonthInput.value.trim() || '每一';
@@ -223,23 +226,25 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 12. 主流程 ----------
+// ---------- 13. 主流程 ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
     initBgParticles();
     updateTitle(titleGroups[0].text);
     
-    // 音乐取消静音
     bgMusic.muted = false;
     bgMusic.play().catch(() => {
         bgMusic.muted = true;
         bgMusic.play();
     });
     
-    // 视频预激活
     video.muted = true;
     video.play().then(() => video.pause()).catch(() => {});
+    
+    // 显示手动触发按钮（调试用）
+    forceBtn.style.display = 'block';
+    forceBtn.addEventListener('click', forceShowFloating);
     
     let index = 0;
     autoTimer = setInterval(() => {
@@ -260,23 +265,17 @@ function startMain(name, month) {
                     video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
                 }, 500);
             }
-            
-            // 显示悬浮词（容器已有内容，只需显示）
-            if (container) {
-                container.style.display = 'block';
-                // 启动动画
-                if (!floatAnimId) animateFloating();
-            }
+            // 自动触发悬浮词（同时显示按钮，如果没自动出现，用户可以手动点击）
+            forceShowFloating();
         }
     }, 5000);
 }
 
-// ---------- 13. 页面启动 ----------
+// ---------- 14. 页面启动 ----------
 function preloadAll() {
     preloadVideoStandard();
-    preloadRandomWords(); // 预生成悬浮词（此时容器隐藏）
+    preloadRandomWords();
     
-    // 音乐开始就尝试播放
     bgMusic.muted = false;
     bgMusic.play().then(() => {
         loadManager.audioReady = true; 
@@ -298,11 +297,10 @@ function preloadAll() {
     if (bgMusic.readyState >= 4) { loadManager.audioReady = true; checkAllLoaded(); }
 }
 
-// ---------- 14. 启动 ----------
+// ---------- 15. 启动 ----------
 resizeCanvas();
 preloadAll();
 
-// 触摸屏幕强制激活音乐
 document.addEventListener('touchstart', function ensureAudio() {
     if (bgMusic.muted) {
         bgMusic.muted = false;
