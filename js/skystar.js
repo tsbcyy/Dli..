@@ -40,26 +40,21 @@ const userMonthInput = document.getElementById('user-month');
 const endingDynamic = document.getElementById('ending-dynamic');
 const mainTitleEl = document.getElementById('main-title');
 
-// 移除原来 HTML 中的三个标题节点 (防止残留)
-const textNodes = document.querySelectorAll('.textone, .texttwo, .textthree');
-textNodes.forEach(el => el.remove());
+// 移除旧HTML三行标题
+document.querySelectorAll('.textone, .texttwo, .textthree').forEach(el => el.remove());
 
 let switchCount = 0, isEndingShown = false, autoTimer, charInterval = null;
 let bgParticles = [];
 const isMobile = window.innerWidth <= 600;
 const loadManager = { videoReady: false, audioReady: false, wordsReady: false, isAllReady: false };
 
-// ---------- 4. 【特效核心】逐字显现函数 ----------
+// ---------- 4. 主标题逐字显现 ----------
 function updateTitle(text) {
     if (charInterval) clearInterval(charInterval);
     mainTitleEl.innerHTML = '';
     let index = 0;
-    
     charInterval = setInterval(() => {
-        if (index >= text.length) {
-            clearInterval(charInterval);
-            return;
-        }
+        if (index >= text.length) { clearInterval(charInterval); return; }
         let char = text[index];
         if (char === '\n') {
             mainTitleEl.appendChild(document.createElement('br'));
@@ -68,12 +63,11 @@ function updateTitle(text) {
             span.className = 'char';
             span.textContent = char;
             mainTitleEl.appendChild(span);
-            // 强制触发回流以启动动画
-            span.offsetHeight; 
+            span.offsetHeight;
             span.classList.add('active');
         }
         index++;
-    }, 70); // 70毫秒跳动一个字，实现明显的渐入
+    }, 70);
 }
 
 // ---------- 5. 背景小粒子 ----------
@@ -129,7 +123,7 @@ function preloadRandomWords() {
     checkAllLoaded();
 }
 
-// ---------- 7. 【修改】视频原生下载缓冲 ----------
+// ---------- 7. 视频原生下载 ----------
 function preloadVideoStandard() {
     video.src = 'video/skystar.mp4';
     video.load();
@@ -175,7 +169,6 @@ startBtn.addEventListener('click', function() {
     }
     startBtn.style.display = 'none';
     loadingStatus.style.display = 'flex';
-
     const waitForLoad = setInterval(() => {
         if (loadManager.isAllReady) {
             clearInterval(waitForLoad);
@@ -195,31 +188,26 @@ startBtn.addEventListener('click', function() {
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
-
     initBgParticles();
-    updateTitle(titleGroups[0].text); // 开始逐字显示第一句
-
-    // 【音乐】已经静音播放，立即取消静音（但浏览器可能因策略阻止，在下面的 touch 中补抓）
+    updateTitle(titleGroups[0].text);
+    // 音乐取消静音
     bgMusic.muted = false;
     bgMusic.play().catch(() => {
-        bgMusic.muted = true; // 如果被阻止，临时静音并播放
+        bgMusic.muted = true;
         bgMusic.play();
     });
-
     // 视频预激活
     video.muted = true;
     video.play().then(() => video.pause()).catch(() => {});
-
     let index = 0;
     autoTimer = setInterval(() => {
         index++;
         if (index < titleGroups.length) {
-            updateTitle(titleGroups[index].text); // 逐字显现下一句
+            updateTitle(titleGroups[index].text);
         } else {
             showEnding(name, month);
             return;
         }
-
         if (index === 3) {
             video.style.display = 'block';
             video.loop = true;
@@ -239,22 +227,19 @@ function startMain(name, month) {
 function preloadAll() {
     preloadVideoStandard();
     preloadRandomWords();
-
-    // 【音乐必须一开始就播放】
-    // 先尝试有声播放
+    // 音乐：第一时间尝试有声播放
     bgMusic.muted = false;
     bgMusic.play().then(() => {
         loadManager.audioReady = true; 
         checkAllLoaded();
     }).catch(() => {
-        // 失败说明手机系统拦截，只能静音播放
+        // 失败则退回静音播放，等触摸触发
         bgMusic.muted = true;
         bgMusic.play().catch(()=>{});
         bgMusic.addEventListener('canplaythrough', () => { 
             loadManager.audioReady = true; 
             checkAllLoaded(); 
         });
-        // 如果音频缓冲很慢，8秒强制放行
         setTimeout(() => { 
             if(!loadManager.audioReady) { 
                 loadManager.audioReady = true; 
@@ -262,7 +247,6 @@ function preloadAll() {
             } 
         }, 8000);
     });
-    // 检测已缓冲的情况
     if (bgMusic.readyState >= 4) { loadManager.audioReady = true; checkAllLoaded(); }
 }
 
@@ -270,10 +254,10 @@ function preloadAll() {
 resizeCanvas();
 preloadAll();
 
-// 附加全局触摸事件，确保第一次触碰屏幕时声音必定出来
+// 【核心】全局触摸监听：只要手指碰任何地方，立即取消静音并播放（没有延迟感）
 document.addEventListener('touchstart', function ensureAudio() {
     if (bgMusic.muted) {
         bgMusic.muted = false;
         bgMusic.play().catch(()=>{});
     }
-}, { once: true }); // 只执行一次
+}, { once: true });
