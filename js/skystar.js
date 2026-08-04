@@ -1,4 +1,3 @@
-// ---------- 1. 悬浮祝福语（生日祝福内容） ----------
 var words = [
     '生日快乐', '万事胜意', '平安喜乐', '前程似锦', 
     '岁岁常欢愉', '年年皆胜意', '未来可期', '所愿皆成真',
@@ -9,7 +8,6 @@ var words = [
     '一生可爱', '一世无忧', '前程似锦', '喜乐长安'
 ];
 
-// ---------- 2. 10组主标题 ----------
 const titleGroups = [
     { text: "生日快乐\n愿你岁岁常欢愉\n年年皆胜意" },
     { text: "新的一岁，愿你闪闪发光\n万事皆可期待" },
@@ -23,13 +21,11 @@ const titleGroups = [
     { text: "祝你生日快乐\n未来可期\n不负心中热爱" }
 ];
 
-// ---------- 3. 您提供的随机函数 ----------
 function randomNum(min, max) {
     var num = (Math.random() * (max - min + 1) + min).toFixed(2);
     return num;
 }
 
-// ---------- 4. DOM 元素 ----------
 const video = document.getElementById('videofilm');
 const bgMusic = document.getElementById('bg-music');
 const container = document.querySelector('.container');
@@ -44,7 +40,6 @@ const userMonthInput = document.getElementById('user-month');
 const endingDynamic = document.getElementById('ending-dynamic');
 const mainTitleEl = document.getElementById('main-title');
 
-// 移除旧HTML三行标题
 document.querySelectorAll('.textone, .texttwo, .textthree').forEach(el => el.remove());
 
 let switchCount = 0, isEndingShown = false, autoTimer, charInterval = null;
@@ -52,7 +47,6 @@ let bgParticles = [];
 const isMobile = window.innerWidth <= 600;
 const loadManager = { videoReady: false, audioReady: false, wordsReady: false, isAllReady: false };
 
-// ---------- 5. 主标题逐字显现 ----------
 function updateTitle(text) {
     if (charInterval) clearInterval(charInterval);
     mainTitleEl.innerHTML = '';
@@ -74,7 +68,6 @@ function updateTitle(text) {
     }, 70);
 }
 
-// ---------- 6. 背景小粒子 ----------
 function initBgParticles() {
     const W = window.innerWidth, H = window.innerHeight;
     bgParticles = [];
@@ -99,8 +92,6 @@ function initBgParticles() {
     }
     drawBg();
 }
-
-// ---------- 7. 预加载悬浮词（使用您的模板 + 居中散布 35-45vw） ----------
 function preloadRandomWords() {
     if (!container) return;
     container.innerHTML = '';
@@ -136,8 +127,6 @@ function preloadRandomWords() {
     loadManager.wordsReady = true;
     checkAllLoaded();
 }
-
-// ---------- 8. 视频原生下载 ----------
 function preloadVideoStandard() {
     video.src = 'video/skystar.mp4';
     video.load();
@@ -156,14 +145,12 @@ function preloadVideoStandard() {
     }, 20000);
 }
 
-// ---------- 9. 加载完成检查 ----------
 function checkAllLoaded() {
     if (loadManager.videoReady && loadManager.audioReady && loadManager.wordsReady) {
         loadManager.isAllReady = true;
     }
 }
 
-// ---------- 10. 大结局 ----------
 function showEnding(name, month) {
     if (isEndingShown) return;
     isEndingShown = true;
@@ -172,7 +159,6 @@ function showEnding(name, month) {
     clearInterval(autoTimer);
 }
 
-// ---------- 11. 开始按钮 ----------
 startBtn.addEventListener('click', function() {
     const name = userNameInput.value.trim() || '亲爱的';
     const month = userMonthInput.value.trim() || '每一';
@@ -184,14 +170,12 @@ startBtn.addEventListener('click', function() {
     startBtn.style.display = 'none';
     loadingStatus.style.display = 'flex';
 
-    // 等待所有资源加载完成
     const waitForLoad = setInterval(() => {
         if (loadManager.isAllReady) {
             clearInterval(waitForLoad);
             startMain(name, month);
         }
     }, 300);
-    // 超时保底
     setTimeout(() => {
         if (!loadManager.isAllReady) {
             clearInterval(waitForLoad);
@@ -201,21 +185,18 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 12. 主流程 ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
     initBgParticles();
     updateTitle(titleGroups[0].text);
 
-    // 音乐取消静音
     bgMusic.muted = false;
     bgMusic.play().catch(() => {
         bgMusic.muted = true;
         bgMusic.play();
     });
 
-    // 视频预激活
     video.muted = true;
     video.play().then(() => video.pause()).catch(() => {});
 
@@ -229,7 +210,6 @@ function startMain(name, month) {
             return;
         }
 
-        // 视频在第4句话（index === 3）时触发
         if (index === 3) {
             video.style.display = 'block';
             video.loop = true;
@@ -242,7 +222,6 @@ function startMain(name, month) {
             }
         }
 
-        // 悬浮祝福语在第三次切换时（index === 2）显示
         if (index === 2) {
             if (container) {
                 container.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; z-index: 9999 !important;';
@@ -255,12 +234,9 @@ function startMain(name, month) {
     }, 5000);
 }
 
-// ---------- 13. 页面启动 ----------
 function preloadAll() {
     preloadVideoStandard();
     preloadRandomWords();
-
-    // 音乐从一开始就尝试播放（静音启动）
     bgMusic.muted = false;
     bgMusic.play().then(() => {
         loadManager.audioReady = true;
@@ -282,11 +258,9 @@ function preloadAll() {
     if (bgMusic.readyState >= 4) { loadManager.audioReady = true; checkAllLoaded(); }
 }
 
-// ---------- 14. 启动 ----------
 resizeCanvas();
 preloadAll();
 
-// 触摸屏幕时强制取消静音
 document.addEventListener('touchstart', function ensureAudio() {
     if (bgMusic.muted) {
         bgMusic.muted = false;
