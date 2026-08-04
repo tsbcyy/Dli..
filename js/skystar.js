@@ -9,7 +9,7 @@ var words = [
     '一生可爱', '一世无忧', '前程似锦', '喜乐长安'
 ];
 
-// ---------- 2. 主标题（手机端多行显示错落有致） ----------
+// ---------- 2. 10组主标题（每组包含三行） ----------
 const titleGroups = [
     { text: "生日快乐\n愿你岁岁常欢愉\n年年皆胜意" },
     { text: "新的一岁，愿你闪闪发光\n万事皆可期待" },
@@ -43,6 +43,11 @@ const userNameInput = document.getElementById('user-name');
 const userMonthInput = document.getElementById('user-month');
 const endingDynamic = document.getElementById('ending-dynamic');
 
+// 获取那几个多余的标题节点，准备处理它们
+const textone = document.querySelector('.textone');
+const texttwo = document.querySelector('.texttwo');
+const textthree = document.querySelector('.textthree');
+
 let W, H, particles = [], bgParticles = [];
 let switchCount = 0, isEndingShown = false, autoTimer;
 const isMobile = window.innerWidth <= 600;
@@ -55,7 +60,7 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ---------- 5. 粒子提取（step=1.5 兼顾细腻和性能） ----------
+// ---------- 5. 粒子提取（step=1.5） ----------
 function getTextPoints(text) {
     const fontSize = Math.min(W * 0.08, 40);
     const lineHeight = fontSize * 1.3;
@@ -72,7 +77,7 @@ function getTextPoints(text) {
     const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
     const data = imageData.data;
     const points = [];
-    const step = 1.5; // 保持 step=1.5，密度适中
+    const step = 1.5; 
     for (let y = 0; y < offCanvas.height; y += step) {
         for (let x = 0; x < offCanvas.width; x += step) {
             const idx = (y * offCanvas.width + x) * 4;
@@ -95,18 +100,18 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环（尺寸调大，绝无中心空白） ----------
+// ---------- 7. 动画循环（绝无中心空白） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
-    const radius = isMobile ? 2.5 : 4.0; // 手机 2.5px，大屏 4px
+    const radius = isMobile ? 2.5 : 4.0; 
     textCtx.shadowColor = '#FFB7C5';
     textCtx.shadowBlur = 6;
     
-    // 【重点】完全遍历每个粒子，绝对不会跳过中心区域，保证文字完整
     particles.forEach(p => {
         const dx = p.tx - p.x, dy = p.ty - p.y;
         if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) { 
-            p.x += dx * 0.08; p.y += dy * 0.08; 
+            p.x += dx * 0.08; 
+            p.y += dy * 0.08; 
         } else { p.x = p.tx; p.y = p.ty; }
         textCtx.beginPath(); textCtx.arc(p.x, p.y, radius, 0, Math.PI * 2);
         textCtx.fillStyle = p.color; textCtx.fill();
@@ -163,7 +168,7 @@ function preloadRandomWords() {
     checkAllLoaded();
 }
 
-// ---------- 10. 视频无声下载 + 底部强制对齐 ----------
+// ---------- 10. 视频无声下载 ----------
 function preloadVideoStandard() {
     video.src = 'video/skystar.mp4';
     video.load();
@@ -225,16 +230,24 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 14. 主流程 ----------
+// ---------- 14. 主流程（【核心修复】清空多余的DOM文字） ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
-    
+
+    // ========== 关键修正开始 ==========
+    // 杜绝屏幕上出现三次相同的标题
+    // 直接清空 HTML 中那三个独立标题节点里面的文字和子元素
+    if (textone) textone.innerHTML = '';
+    if (texttwo) texttwo.innerHTML = '';
+    if (textthree) textthree.innerHTML = '';
+    // ========== 关键修正结束 ==========
+
     initBgParticles();
     generateParticles(titleGroups[0].text);
     animateText();
 
-    // 音乐取消静音，无延迟
+    // 音乐取消静音
     bgMusic.muted = false;
     bgMusic.play().then(() => {}).catch(() => {});
 
