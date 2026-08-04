@@ -26,10 +26,6 @@ const titleGroups = [
 function randomNum(min, max) { return (Math.random() * (max - min + 1) + min).toFixed(2); }
 
 // ---------- 3. DOM 元素 ----------
-const textCanvas = document.getElementById('text-canvas');
-const textCtx = textCanvas.getContext('2d');
-const particleCanvas = document.getElementById('particles-canvas');
-const particleCtx = particleCanvas.getContext('2d');
 const video = document.getElementById('videofilm');
 const bgMusic = document.getElementById('bg-music');
 const container = document.querySelector('.container');
@@ -42,70 +38,47 @@ const loadingStatus = document.getElementById('loading-status');
 const userNameInput = document.getElementById('user-name');
 const userMonthInput = document.getElementById('user-month');
 const endingDynamic = document.getElementById('ending-dynamic');
+const mainTitleEl = document.getElementById('main-title');
 
-// 移除多余的HTML标题节点
-const textone = document.querySelector('.textone');
-const texttwo = document.querySelector('.texttwo');
-const textthree = document.querySelector('.textthree');
+// 移除原来 HTML 中的三个标题节点 (防止残留)
+const textNodes = document.querySelectorAll('.textone, .texttwo, .textthree');
+textNodes.forEach(el => el.remove());
 
-let W, H, bgParticles = [];
-let switchCount = 0, isEndingShown = false, autoTimer;
-let currentMainText = ""; // 存储当前要显示的主标题
+let switchCount = 0, isEndingShown = false, autoTimer, charInterval = null;
+let bgParticles = [];
 const isMobile = window.innerWidth <= 600;
 const loadManager = { videoReady: false, audioReady: false, wordsReady: false, isAllReady: false };
 
-// ---------- 4. 尺寸适配 ----------
-function resizeCanvas() {
-    W = textCanvas.width = particleCanvas.width = window.innerWidth;
-    H = textCanvas.height = particleCanvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-
-// ---------- 5. 【特效核心】更新主标题内容 ----------
-function updateMainText(text) {
-    currentMainText = text;
-}
-
-// ---------- 6. 【特效核心】绘制渐变发光字（取代粒子） ----------
-function animateText() {
-    textCtx.clearRect(0, 0, W, H);
+// ---------- 4. 【特效核心】逐字显现函数 ----------
+function updateTitle(text) {
+    if (charInterval) clearInterval(charInterval);
+    mainTitleEl.innerHTML = '';
+    let index = 0;
     
-    if (!currentMainText) {
-        requestAnimationFrame(animateText);
-        return;
-    }
-
-    // 设置字体大小（手机端稍小，适应屏幕）
-    const fontSize = Math.min(W * 0.07, 40);
-    textCtx.font = `${fontSize}px '楷体', 'KaiTi', serif`;
-    textCtx.textAlign = 'center';
-    textCtx.textBaseline = 'middle';
-
-    // 1. 设置粉色发光（文字背后的柔和光晕）
-    textCtx.shadowColor = '#FFB7C5';
-    textCtx.shadowBlur = 25;
-
-    // 2. 创建粉-白渐变，让文字色彩更有层次
-    const gradient = textCtx.createLinearGradient(0, H/2 - 100, 0, H/2 + 100);
-    gradient.addColorStop(0, '#FFB7C5'); // 顶部粉红
-    gradient.addColorStop(0.5, '#FFC0CB'); // 中间亮粉
-    gradient.addColorStop(1, '#E8F9FD'); // 底部白粉
-    textCtx.fillStyle = gradient;
-
-    // 3. 直接绘制整段文字（支持换行）
-    const lines = currentMainText.split('\n');
-    const lineHeight = fontSize * 1.4;
-    const startY = (H - lines.length * lineHeight) / 2 + lineHeight / 2;
-    
-    lines.forEach((line, index) => {
-        textCtx.fillText(line, W / 2, startY + index * lineHeight);
-    });
-
-    requestAnimationFrame(animateText);
+    charInterval = setInterval(() => {
+        if (index >= text.length) {
+            clearInterval(charInterval);
+            return;
+        }
+        let char = text[index];
+        if (char === '\n') {
+            mainTitleEl.appendChild(document.createElement('br'));
+        } else {
+            let span = document.createElement('span');
+            span.className = 'char';
+            span.textContent = char;
+            mainTitleEl.appendChild(span);
+            // 强制触发回流以启动动画
+            span.offsetHeight; 
+            span.classList.add('active');
+        }
+        index++;
+    }, 70); // 70毫秒跳动一个字，实现明显的渐入
 }
 
-// ---------- 7. 背景小粒子（保留氛围点缀） ----------
+// ---------- 5. 背景小粒子 ----------
 function initBgParticles() {
+    const W = window.innerWidth, H = window.innerHeight;
     bgParticles = [];
     for (let i = 0; i < 40; i++) {
         bgParticles.push({
@@ -113,11 +86,14 @@ function initBgParticles() {
             r: Math.random() * 2 + 1, color: `hsla(340, 80%, 70%, ${Math.random() * 0.4 + 0.2})`
         });
     }
+    const canvas = document.getElementById('particles-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = W; canvas.height = H;
     function drawBg() {
-        particleCtx.clearRect(0, 0, W, H);
+        ctx.clearRect(0, 0, W, H);
         bgParticles.forEach(p => {
-            particleCtx.beginPath(); particleCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-            particleCtx.fillStyle = p.color; particleCtx.fill();
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = p.color; ctx.fill();
             p.x += p.vx; p.y += p.vy;
             if (p.x < 0 || p.x > W) p.vx *= -1; if (p.y < 0 || p.y > H) p.vy *= -1;
         });
@@ -126,7 +102,7 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 8. 预加载悬浮词（半径 45-60vw） ----------
+// ---------- 6. 预加载悬浮词 ----------
 function preloadRandomWords() {
     container.innerHTML = '';
     let f = document.createDocumentFragment();
@@ -153,7 +129,7 @@ function preloadRandomWords() {
     checkAllLoaded();
 }
 
-// ---------- 9. 视频无声下载 ----------
+// ---------- 7. 【修改】视频原生下载缓冲 ----------
 function preloadVideoStandard() {
     video.src = 'video/skystar.mp4';
     video.load();
@@ -172,14 +148,14 @@ function preloadVideoStandard() {
     }, 20000);
 }
 
-// ---------- 10. 加载完成检查 ----------
+// ---------- 8. 加载完成检查 ----------
 function checkAllLoaded() {
     if (loadManager.videoReady && loadManager.audioReady && loadManager.wordsReady) {
         loadManager.isAllReady = true;
     }
 }
 
-// ---------- 11. 大结局 ----------
+// ---------- 9. 大结局 ----------
 function showEnding(name, month) {
     if (isEndingShown) return;
     isEndingShown = true;
@@ -188,7 +164,7 @@ function showEnding(name, month) {
     clearInterval(autoTimer);
 }
 
-// ---------- 12. 开始按钮 ----------
+// ---------- 10. 开始按钮 ----------
 startBtn.addEventListener('click', function() {
     const name = userNameInput.value.trim() || '亲爱的';
     const month = userMonthInput.value.trim() || '每一';
@@ -215,24 +191,20 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 13. 主流程 ----------
+// ---------- 11. 主流程 ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
 
-    // 彻底清除多余的HTML标题节点
-    if (textone) textone.remove();
-    if (texttwo) texttwo.remove();
-    if (textthree) textthree.remove();
-
     initBgParticles();
-    // 显示第一句主标题
-    updateMainText(titleGroups[0].text);
-    // 启动绘制循环（已通过 animateText 持续运行）
+    updateTitle(titleGroups[0].text); // 开始逐字显示第一句
 
-    // 音乐取消静音
+    // 【音乐】已经静音播放，立即取消静音（但浏览器可能因策略阻止，在下面的 touch 中补抓）
     bgMusic.muted = false;
-    bgMusic.play().then(() => {}).catch(() => {});
+    bgMusic.play().catch(() => {
+        bgMusic.muted = true; // 如果被阻止，临时静音并播放
+        bgMusic.play();
+    });
 
     // 视频预激活
     video.muted = true;
@@ -242,7 +214,7 @@ function startMain(name, month) {
     autoTimer = setInterval(() => {
         index++;
         if (index < titleGroups.length) {
-            updateMainText(titleGroups[index].text);
+            updateTitle(titleGroups[index].text); // 逐字显现下一句
         } else {
             showEnding(name, month);
             return;
@@ -263,24 +235,45 @@ function startMain(name, month) {
     }, 5000);
 }
 
-// ---------- 14. 页面启动 ----------
+// ---------- 12. 页面启动 ----------
 function preloadAll() {
     preloadVideoStandard();
     preloadRandomWords();
-    bgMusic.play().catch(() => {});
-    bgMusic.addEventListener('canplaythrough', () => { loadManager.audioReady = true; checkAllLoaded(); });
+
+    // 【音乐必须一开始就播放】
+    // 先尝试有声播放
+    bgMusic.muted = false;
+    bgMusic.play().then(() => {
+        loadManager.audioReady = true; 
+        checkAllLoaded();
+    }).catch(() => {
+        // 失败说明手机系统拦截，只能静音播放
+        bgMusic.muted = true;
+        bgMusic.play().catch(()=>{});
+        bgMusic.addEventListener('canplaythrough', () => { 
+            loadManager.audioReady = true; 
+            checkAllLoaded(); 
+        });
+        // 如果音频缓冲很慢，8秒强制放行
+        setTimeout(() => { 
+            if(!loadManager.audioReady) { 
+                loadManager.audioReady = true; 
+                checkAllLoaded(); 
+            } 
+        }, 8000);
+    });
+    // 检测已缓冲的情况
     if (bgMusic.readyState >= 4) { loadManager.audioReady = true; checkAllLoaded(); }
-    setTimeout(() => { if(!loadManager.audioReady) { loadManager.audioReady = true; checkAllLoaded(); } }, 8000);
-    
-    // 预先启动动画循环
-    animateText();
 }
 
-// ---------- 15. 启动 ----------
+// ---------- 13. 启动 ----------
 resizeCanvas();
 preloadAll();
 
-// 触摸屏幕强制激活音乐
-document.addEventListener('touchstart', function() {
-    if (bgMusic.muted) { bgMusic.muted = false; bgMusic.play().catch(()=>{}); }
-});
+// 附加全局触摸事件，确保第一次触碰屏幕时声音必定出来
+document.addEventListener('touchstart', function ensureAudio() {
+    if (bgMusic.muted) {
+        bgMusic.muted = false;
+        bgMusic.play().catch(()=>{});
+    }
+}, { once: true }); // 只执行一次
