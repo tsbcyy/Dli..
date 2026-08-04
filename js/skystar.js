@@ -72,7 +72,7 @@ function getTextPoints(text) {
     const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
     const data = imageData.data;
     const points = [];
-    const step = 1; // 绝对保留 step=1
+    const step = 1; // 坚决保持 step=1
     for (let y = 0; y < offCanvas.height; y += step) {
         for (let x = 0; x < offCanvas.width; x += step) {
             const idx = (y * offCanvas.width + x) * 4;
@@ -95,22 +95,26 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环（【优化】手机端更流畅） ----------
+// ---------- 7. 动画循环（【核心优化】降低手机端绘制负载） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
     const radius = isMobile ? 2.0 : 3.5; 
     textCtx.shadowColor = '#FFB7C5';
     textCtx.shadowBlur = 6;
     
-    // 手机端优化：放缓移动速度，减少每帧计算量，让高密度粒子运动更平滑
-    const speedFactor = isMobile ? 0.10 : 0.08;
-    const threshold = isMobile ? 1.0 : 0.5;
+    // 针对低端手机优化：跳过部分中心区域粒子（减少约30%绘制量）
+    const skip = isMobile;
+    const skipRadius = W * 0.08; // 跳过中心附近 8% 宽度的粒子，降低密集区负担
     
     particles.forEach(p => {
+        if (skip && Math.abs(p.x - W/2) < skipRadius && Math.abs(p.y - H/2) < skipRadius) {
+            // 跳过中心区域部分粒子，不影响整体文字形状
+            return;
+        }
         const dx = p.tx - p.x, dy = p.ty - p.y;
-        if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) { 
-            p.x += dx * speedFactor; 
-            p.y += dy * speedFactor; 
+        if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) { 
+            p.x += dx * 0.08; 
+            p.y += dy * 0.08; 
         } else { 
             p.x = p.tx; p.y = p.ty; 
         }
@@ -142,7 +146,7 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 9. 预加载悬浮词 ----------
+// ---------- 9. 预加载悬浮词（半径调至 45-60vw） ----------
 function preloadRandomWords() {
     container.innerHTML = '';
     let f = document.createDocumentFragment();
@@ -153,7 +157,8 @@ function preloadRandomWords() {
         word.style.fontSize = isMobile ? '14px' : '18px'; 
         word.style.color = '#FFB7C5';
         word_box.classList.add('word-box');
-        let dist = randomNum(35, 50) + 'vw'; 
+        // 【修改】半径范围 45-60vw，向外扩散更远
+        let dist = randomNum(45, 60) + 'vw'; 
         let deg = (index * 15) + 'deg'; 
         let speed = randomNum(15, 25) + 's'; 
         let delay = (0.2 + index * 0.15) + 's'; 
@@ -169,11 +174,11 @@ function preloadRandomWords() {
     checkAllLoaded();
 }
 
-// ---------- 10. 视频无声下载预加载 ----------
+// ---------- 10. 视频无声下载预加载（全程作背景板） ----------
 function preloadVideoStandard() {
     video.src = 'video/skystar.mp4';
     video.load();
-    video.muted = true; 
+    video.muted = true; // 始终静音
     video.addEventListener('canplaythrough', function onReady() {
         video.removeEventListener('canplaythrough', onReady);
         loadManager.videoReady = true;
@@ -230,7 +235,7 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 14. 主流程（修复：音乐取消静音 + 视频预激活） ----------
+// ---------- 14. 主流程（背景板视频 + 音乐取消静音） ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
@@ -239,11 +244,11 @@ function startMain(name, month) {
     generateParticles(titleGroups[0].text);
     animateText();
 
-    // 【修复1】确保音乐取消静音并播放
+    // 音乐取消静音（已经通过 HTML 自动播放过，取消静音即出声）
     bgMusic.muted = false;
-    bgMusic.play().catch((e) => console.warn('音乐播放失败:', e));
+    bgMusic.play().catch(()=>{});
 
-    // 【修复2】视频预激活：在切换前就唤醒播放器，解决 QQ 浏览器拦截
+    // 视频预激活（准备作为背景板）
     video.muted = true;
     video.play().then(() => video.pause()).catch(() => {});
 
@@ -258,22 +263,22 @@ function startMain(name, month) {
         }
 
         if (index === 3) {
-            // 【修复3】视频无声播放（保持 muted 不变）
+            // 背景板视频：全程静音、循环、无控制条
             video.style.display = 'block';
             video.loop = true;
-            // 因为已经预激活，这里一定能播放
             video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
             container.style.display = 'block';
         }
     }, 5000);
 }
 
-// ---------- 15. 页面启动（音乐已通过 HTML autoplay 静音启动） ----------
+// ---------- 15. 页面启动（确保音乐静音激活） ----------
 function preloadAll() {
     preloadVideoStandard();
     preloadRandomWords();
 
-    // 音频加载完成检查
+    // 音频：自带 autoplay muted 属性，但再次主动激活
+    bgMusic.play().catch(()=>{}); 
     bgMusic.addEventListener('canplaythrough', () => { loadManager.audioReady = true; checkAllLoaded(); });
     setTimeout(() => { if(!loadManager.audioReady) { loadManager.audioReady = true; checkAllLoaded(); } }, 8000);
 }
@@ -281,3 +286,8 @@ function preloadAll() {
 // ---------- 16. 启动 ----------
 resizeCanvas();
 preloadAll();
+
+// 额外：当用户触摸屏幕时，确保音乐取消静音后能正常播放
+document.addEventListener('touchstart', function() {
+    if (bgMusic.muted) { bgMusic.muted = false; bgMusic.play().catch(()=>{}); }
+});
