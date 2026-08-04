@@ -55,7 +55,7 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ---------- 5. 粒子提取（强制 step=1） ----------
+// ---------- 5. 粒子提取（【修改】将 step 调大到 2，大幅降低密度） ----------
 function getTextPoints(text) {
     const fontSize = Math.min(W * 0.08, 40);
     const lineHeight = fontSize * 1.3;
@@ -72,7 +72,8 @@ function getTextPoints(text) {
     const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
     const data = imageData.data;
     const points = [];
-    const step = 1; 
+    // 【核心修改】以前是 step=1（像素级），现在改为 step=2，减少约 75% 的粒子数量，解决“太密”问题
+    const step = 2; 
     for (let y = 0; y < offCanvas.height; y += step) {
         for (let x = 0; x < offCanvas.width; x += step) {
             const idx = (y * offCanvas.width + x) * 4;
@@ -95,11 +96,10 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环（【修改】粒子尺寸调小一号） ----------
+// ---------- 7. 动画循环（粒子尺寸维持之前调小的值） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
-    // 手机从 2.5 调小到 2.0px，电脑从 4.0 调小到 3.0px
-    const radius = isMobile ? 2.0 : 3.0; 
+    const radius = isMobile ? 2.0 : 3.0; // 维持之前调小的尺寸，不改
     textCtx.shadowColor = '#FFB7C5';
     textCtx.shadowBlur = 6; 
     particles.forEach(p => {
@@ -134,7 +134,7 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 9. 预加载悬浮词（【修改】公转半径往外扩） ----------
+// ---------- 9. 预加载悬浮词（【修改】公转半径拉到 30-45vw） ----------
 function preloadRandomWords() {
     container.innerHTML = '';
     let f = document.createDocumentFragment();
@@ -145,8 +145,8 @@ function preloadRandomWords() {
         word.style.fontSize = isMobile ? '14px' : '18px'; 
         word.style.color = '#FFB7C5';
         word_box.classList.add('word-box');
-        // 半径从 15~35 扩大到 20~45，扩散范围更广
-        let dist = randomNum(20, 45) + 'vw'; 
+        // 【核心修改】从 20-45 缩小到 30-45，去除中间拥挤区域，更往外扩散
+        let dist = randomNum(30, 45) + 'vw'; 
         let deg = (index * 15) + 'deg'; 
         let speed = randomNum(15, 25) + 's'; 
         let delay = (0.2 + index * 0.15) + 's'; 
