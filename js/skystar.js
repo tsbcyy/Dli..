@@ -1,3 +1,4 @@
+// ---------- 1. 悬浮祝福语 ----------
 var words = [
     '生日快乐', '万事胜意', '平安喜乐', '前程似锦', 
     '岁岁常欢愉', '年年皆胜意', '未来可期', '所愿皆成真',
@@ -8,6 +9,7 @@ var words = [
     '一生可爱', '一世无忧', '前程似锦', '喜乐长安'
 ];
 
+// ---------- 2. 10组主标题 ----------
 const titleGroups = [
     { text: "生日快乐\n愿你岁岁常欢愉\n年年皆胜意" },
     { text: "新的一岁，愿你闪闪发光\n万事皆可期待" },
@@ -23,9 +25,10 @@ const titleGroups = [
 
 function randomNum(min, max) { return (Math.random() * (max - min + 1) + min).toFixed(2); }
 
+// ---------- 3. DOM 元素 ----------
 const video = document.getElementById('videofilm');
 const bgMusic = document.getElementById('bg-music');
-const container = document.querySelector('.container');
+const container = document.querySelector('.container'); // 悬浮词容器
 const staticBg = document.getElementById('static-bg');
 const endingOverlay = document.getElementById('ending-overlay');
 const entryScreen = document.getElementById('entry-screen');
@@ -37,6 +40,7 @@ const userMonthInput = document.getElementById('user-month');
 const endingDynamic = document.getElementById('ending-dynamic');
 const mainTitleEl = document.getElementById('main-title');
 
+// 移除旧HTML三行标题
 document.querySelectorAll('.textone, .texttwo, .textthree').forEach(el => el.remove());
 
 let switchCount = 0, isEndingShown = false, autoTimer, charInterval = null;
@@ -44,6 +48,7 @@ let bgParticles = [];
 const isMobile = window.innerWidth <= 600;
 const loadManager = { videoReady: false, audioReady: false, wordsReady: false, isAllReady: false };
 
+// ---------- 4. 主标题逐字显现 ----------
 function updateTitle(text) {
     if (charInterval) clearInterval(charInterval);
     mainTitleEl.innerHTML = '';
@@ -65,6 +70,7 @@ function updateTitle(text) {
     }, 70);
 }
 
+// ---------- 5. 背景小粒子 ----------
 function initBgParticles() {
     const W = window.innerWidth, H = window.innerHeight;
     bgParticles = [];
@@ -90,10 +96,13 @@ function initBgParticles() {
     drawBg();
 }
 
+// ---------- 6. 【核心修复】生成并强制显示悬浮词 ----------
 function preloadRandomWords() {
     if (!container) return;
     container.innerHTML = '';
-    container.classList.remove('show');
+    // 在生成前就强制清空所有可能的干扰样式
+    container.style.cssText = 'display: none !important;'; 
+    
     let f = document.createDocumentFragment();
     words.forEach((w, index) => {
         let word_box = document.createElement('div');
@@ -118,6 +127,7 @@ function preloadRandomWords() {
     checkAllLoaded();
 }
 
+// ---------- 7. 视频原生下载 ----------
 function preloadVideoStandard() {
     video.src = 'video/skystar.mp4';
     video.load();
@@ -136,12 +146,14 @@ function preloadVideoStandard() {
     }, 20000);
 }
 
+// ---------- 8. 加载完成检查 ----------
 function checkAllLoaded() {
     if (loadManager.videoReady && loadManager.audioReady && loadManager.wordsReady) {
         loadManager.isAllReady = true;
     }
 }
 
+// ---------- 9. 大结局 ----------
 function showEnding(name, month) {
     if (isEndingShown) return;
     isEndingShown = true;
@@ -150,6 +162,7 @@ function showEnding(name, month) {
     clearInterval(autoTimer);
 }
 
+// ---------- 10. 开始按钮 ----------
 startBtn.addEventListener('click', function() {
     const name = userNameInput.value.trim() || '亲爱的';
     const month = userMonthInput.value.trim() || '每一';
@@ -175,13 +188,14 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
+// ---------- 11. 主流程 ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
     initBgParticles();
     updateTitle(titleGroups[0].text);
     
-    // 音乐取消静音
+    // 音乐取消静音（不动您满意的代码）
     bgMusic.muted = false;
     bgMusic.play().catch(() => {
         bgMusic.muted = true;
@@ -211,21 +225,32 @@ function startMain(name, month) {
                     video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
                 }, 500);
             }
-            // 触发悬浮词
+            
+            // 【终极修复】强制让悬浮词显示出来
             if (container) {
-                container.style.display = 'block';
+                // 1. 直接覆盖显示属性
+                container.style.display = 'block !important';
+                // 2. 清除任何可能残留的隐藏类
+                container.classList.remove('hidden');
+                container.classList.remove('show');
+                // 3. 重新激活动画
                 setTimeout(() => {
                     container.classList.add('show');
                 }, 50);
+                
+                // 4. 额外保险：打印日志确认代码执行了
+                console.log('悬空祝福语已强制触发显示');
             }
         }
     }, 5000);
 }
 
+// ---------- 12. 页面启动 ----------
 function preloadAll() {
     preloadVideoStandard();
     preloadRandomWords();
-    // 音乐第一时间尝试有声播放
+    
+    // 音乐播放逻辑（保持您满意的原样）
     bgMusic.muted = false;
     bgMusic.play().then(() => {
         loadManager.audioReady = true; 
@@ -247,11 +272,11 @@ function preloadAll() {
     if (bgMusic.readyState >= 4) { loadManager.audioReady = true; checkAllLoaded(); }
 }
 
-// 启动
+// ---------- 13. 启动 ----------
 resizeCanvas();
 preloadAll();
 
-// 触摸屏幕强制激活音乐
+// 触摸屏幕强制激活音乐（保持您满意的原样）
 document.addEventListener('touchstart', function ensureAudio() {
     if (bgMusic.muted) {
         bgMusic.muted = false;
