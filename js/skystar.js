@@ -9,7 +9,7 @@ var words = [
     '一生可爱', '一世无忧', '前程似锦', '喜乐长安'
 ];
 
-// ---------- 2. 主标题 ----------
+// ---------- 2. 主标题（手机端多行显示错落有致） ----------
 const titleGroups = [
     { text: "生日快乐\n愿你岁岁常欢愉\n年年皆胜意" },
     { text: "新的一岁，愿你闪闪发光\n万事皆可期待" },
@@ -47,7 +47,6 @@ let W, H, particles = [], bgParticles = [];
 let switchCount = 0, isEndingShown = false, autoTimer;
 const isMobile = window.innerWidth <= 600;
 const loadManager = { videoReady: false, audioReady: false, wordsReady: false, isAllReady: false };
-let loadLog = ''; // 记录加载状态
 
 // ---------- 4. 尺寸适配 ----------
 function resizeCanvas() {
@@ -56,7 +55,7 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ---------- 5. 粒子提取（step 改为 1.5，降低密度） ----------
+// ---------- 5. 粒子提取（step=1.5 兼顾细腻和性能） ----------
 function getTextPoints(text) {
     const fontSize = Math.min(W * 0.08, 40);
     const lineHeight = fontSize * 1.3;
@@ -73,8 +72,7 @@ function getTextPoints(text) {
     const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
     const data = imageData.data;
     const points = [];
-    // 【核心修改】step = 1.5，比 1.0 稀疏，比 2.0 细腻，平衡密度
-    const step = 1.5; 
+    const step = 1.5; // 保持 step=1.5，密度适中
     for (let y = 0; y < offCanvas.height; y += step) {
         for (let x = 0; x < offCanvas.width; x += step) {
             const idx = (y * offCanvas.width + x) * 4;
@@ -97,23 +95,19 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环（粒子调大，移除中心挖空） ----------
+// ---------- 7. 动画循环（尺寸调大，绝无中心空白） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
-    // 【核心修改】手机端 2.5px（调大），电脑端 4.0px（调大）
-    const radius = isMobile ? 2.5 : 4.0; 
+    const radius = isMobile ? 2.5 : 4.0; // 手机 2.5px，大屏 4px
     textCtx.shadowColor = '#FFB7C5';
     textCtx.shadowBlur = 6;
     
-    // 【移除】不再跳过中心区域粒子，保证文字完整无正方形空白
+    // 【重点】完全遍历每个粒子，绝对不会跳过中心区域，保证文字完整
     particles.forEach(p => {
         const dx = p.tx - p.x, dy = p.ty - p.y;
         if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) { 
-            p.x += dx * 0.08; 
-            p.y += dy * 0.08; 
-        } else { 
-            p.x = p.tx; p.y = p.ty; 
-        }
+            p.x += dx * 0.08; p.y += dy * 0.08; 
+        } else { p.x = p.tx; p.y = p.ty; }
         textCtx.beginPath(); textCtx.arc(p.x, p.y, radius, 0, Math.PI * 2);
         textCtx.fillStyle = p.color; textCtx.fill();
     });
@@ -166,31 +160,23 @@ function preloadRandomWords() {
     });
     container.appendChild(f);
     loadManager.wordsReady = true;
-    console.log('✅ 悬浮词已就绪');
     checkAllLoaded();
 }
 
-// ---------- 10. 视频无声下载预加载 ----------
+// ---------- 10. 视频无声下载 + 底部强制对齐 ----------
 function preloadVideoStandard() {
     video.src = 'video/skystar.mp4';
     video.load();
-    video.muted = true; // 始终静音（背景板）
+    video.muted = true;
     video.addEventListener('canplaythrough', function onReady() {
         video.removeEventListener('canplaythrough', onReady);
         loadManager.videoReady = true;
-        console.log('✅ 视频已就绪 (canplaythrough)');
         checkAllLoaded();
     });
-    // 如果视频较小，可能快速就绪，提前检查一次
-    if (video.readyState >= 4) {
-        loadManager.videoReady = true;
-        console.log('✅ 视频已就绪 (readyState)');
-        checkAllLoaded();
-    }
+    if (video.readyState >= 4) { loadManager.videoReady = true; checkAllLoaded(); }
     setTimeout(() => {
         if (!loadManager.videoReady) {
             loadManager.videoReady = true;
-            console.log('⚠️ 视频加载超时，强制放行');
             checkAllLoaded();
         }
     }, 20000);
@@ -200,7 +186,6 @@ function preloadVideoStandard() {
 function checkAllLoaded() {
     if (loadManager.videoReady && loadManager.audioReady && loadManager.wordsReady) {
         loadManager.isAllReady = true;
-        console.log('🎉 全部资源加载完毕！');
     }
 }
 
@@ -224,24 +209,13 @@ startBtn.addEventListener('click', function() {
     }
     startBtn.style.display = 'none';
     loadingStatus.style.display = 'flex';
-    loadingStatus.innerHTML = '<div class="loader-small"></div><span>正在加载星空与旋律... (视频/音乐/词)</span>';
 
     const waitForLoad = setInterval(() => {
         if (loadManager.isAllReady) {
             clearInterval(waitForLoad);
             startMain(name, month);
-        } else {
-            // 更新加载状态提示
-            let status = '加载中... ';
-            if (loadManager.videoReady) status += '✅视频 ';
-            else status += '⏳视频 ';
-            if (loadManager.audioReady) status += '✅音乐 ';
-            else status += '⏳音乐 ';
-            if (loadManager.wordsReady) status += '✅词 ';
-            else status += '⏳词 ';
-            loadingStatus.innerHTML = `<div class="loader-small"></div><span>${status}</span>`;
         }
-    }, 500);
+    }, 300);
     setTimeout(() => {
         if (!loadManager.isAllReady) {
             clearInterval(waitForLoad);
@@ -251,7 +225,7 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 14. 主流程（音乐即时取消静音，视频背景板） ----------
+// ---------- 14. 主流程 ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
@@ -260,16 +234,11 @@ function startMain(name, month) {
     generateParticles(titleGroups[0].text);
     animateText();
 
-    // 音乐：直接取消静音并播放，消除延迟
+    // 音乐取消静音，无延迟
     bgMusic.muted = false;
-    bgMusic.play().then(() => {
-        console.log('🎵 音乐播放中...');
-    }).catch(() => {
-        console.warn('⚠️ 音乐播放被拦截，尝试重新激活');
-        // 若被拦截，等用户触摸时再试
-    });
+    bgMusic.play().then(() => {}).catch(() => {});
 
-    // 视频预激活（确保后续能无声播放）
+    // 视频预激活
     video.muted = true;
     video.play().then(() => video.pause()).catch(() => {});
 
@@ -284,14 +253,11 @@ function startMain(name, month) {
         }
 
         if (index === 3) {
-            // 背景板视频：无声、循环
             video.style.display = 'block';
             video.loop = true;
-            // 检查是否已加载完成，避免等待 canplaythrough 延迟
             if (video.readyState >= 4) {
                 video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
             } else {
-                // 若未就绪，等待一下再播
                 setTimeout(() => {
                     video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
                 }, 500);
@@ -301,43 +267,21 @@ function startMain(name, month) {
     }, 5000);
 }
 
-// ---------- 15. 页面启动（音乐静音激活 + 实时加载反馈） ----------
+// ---------- 15. 页面启动 ----------
 function preloadAll() {
-    console.log('🚀 开始加载资源...');
     preloadVideoStandard();
     preloadRandomWords();
-
-    // 音频：虽然 HTML 有 autoplay muted，但主动触发一次确保激活
-    bgMusic.play().catch(() => {
-        console.log('⏳ 音乐静音启动中...');
-    }); 
-    bgMusic.addEventListener('canplaythrough', () => { 
-        loadManager.audioReady = true; 
-        console.log('✅ 音乐已就绪');
-        checkAllLoaded(); 
-    });
-    // 检查是否已经就绪
-    if (bgMusic.readyState >= 4) {
-        loadManager.audioReady = true;
-        checkAllLoaded();
-    }
-    setTimeout(() => { 
-        if(!loadManager.audioReady) { 
-            loadManager.audioReady = true; 
-            console.log('⚠️ 音乐加载超时，强制放行');
-            checkAllLoaded(); 
-        } 
-    }, 8000);
+    bgMusic.play().catch(() => {});
+    bgMusic.addEventListener('canplaythrough', () => { loadManager.audioReady = true; checkAllLoaded(); });
+    if (bgMusic.readyState >= 4) { loadManager.audioReady = true; checkAllLoaded(); }
+    setTimeout(() => { if(!loadManager.audioReady) { loadManager.audioReady = true; checkAllLoaded(); } }, 8000);
 }
 
 // ---------- 16. 启动 ----------
 resizeCanvas();
 preloadAll();
 
-// 当用户触摸屏幕时，确保音乐取消静音后能立即播放
+// 触摸屏幕强制激活音乐
 document.addEventListener('touchstart', function() {
-    if (bgMusic.muted) { 
-        bgMusic.muted = false; 
-        bgMusic.play().catch(()=>{}); 
-    }
+    if (bgMusic.muted) { bgMusic.muted = false; bgMusic.play().catch(()=>{}); }
 });
