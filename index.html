@@ -12,17 +12,17 @@
     <!-- 输入页 -->
     <div id="entry-screen">
         <div class="entry-box">
-            <div class="entry-title">专属祝福生成器</div>
-            <div class="entry-sub">定制星光璀璨的一刻</div>
+            <div class="entry-title">🌟 专属祝福生成器</div>
+            <div class="entry-sub">为亲爱的TA，定制星光璀璨的一刻</div>
             <div class="input-group">
-                <label>你的昵称</label>
+                <label>TA 的昵称</label>
                 <input type="text" id="user-name" placeholder="请输入名字" class="entry-input">
             </div>
             <div class="input-group">
-                <label>你的生日月份</label>
+                <label>TA 的生日月份</label>
                 <input type="number" id="user-month" placeholder="1 - 12" min="1" max="12" class="entry-input">
             </div>
-            <button id="start-btn" class="entry-btn">开始祝福之路</button>
+            <button id="start-btn" class="entry-btn">✨ 开始为她祝福</button>
             <div id="loading-status" class="entry-loading" style="display:none;">
                 <div class="loader-small"></div>
                 <span>正在加载星空与旋律...</span>
@@ -33,9 +33,7 @@
     <!-- 主界面 -->
     <div id="main-screen" style="display:none;">
         <div id="static-bg"></div>
-        <!-- 主标题容器（逐字显现） -->
         <div id="main-title" class="main-title"></div>
-        
         <video id="videofilm" poster="img/skystar2.jpg" loop style="display:none;" muted playsinline webkit-playsinline x5-video-player-type="h5" x5-video-player-fullscreen="true" preload="auto">
             <source src="video/skystar.mp4" type="video/mp4">
         </video>
@@ -43,6 +41,8 @@
         <audio id="bg-music" src="video/晴天.mp3" autoplay muted preload="auto"></audio>
         <!-- 悬浮祝福语容器 -->
         <div class="container" style="display:none;"></div>
+        <!-- 手动触发按钮（调试用） -->
+        <button id="force-show-btn" style="position:fixed; bottom:20px; right:20px; z-index:999; padding:10px 20px; background:#FFB7C5; border:none; border-radius:30px; color:#fff; font-size:14px; box-shadow:0 0 15px rgba(255,105,180,0.5); display:none;">显示祝福</button>
     </div>
 
     <!-- 完结页 -->
