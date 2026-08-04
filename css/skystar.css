@@ -1,34 +1,31 @@
-/* 悬浮祝福语（CSS驱动公转） */
+/* 悬浮祝福语（使用您的 init 模板动画） */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     overflow: hidden; z-index: 5; pointer-events: none;
     display: none;
 }
-/* 强制显示 */
 .container.show {
     display: block !important;
     opacity: 1 !important;
     visibility: visible !important;
 }
-:root { --dist: 35vw; --deg: 0deg; --speed: 10s; --delay: 0s; }
+:root { --margin-top: 0; --margin-left: 0; --animation-duration: 0s; --animation-delay: 0s; }
 .word-box {
-    position: absolute; top: 50%; left: 50%;
-    animation: orbit var(--speed) linear infinite;
-    animation-delay: var(--delay); 
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    margin-top: var(--margin-top);
+    margin-left: var(--margin-left);
+    animation: rotY var(--animation-duration) linear infinite;
+    animation-delay: var(--animation-delay);
 }
 .word-box .word {
     position: absolute;
     color: #BAABDA; font-family: '楷体';
-    text-shadow: 0 0 8px rgba(255, 105, 180, 0.4);
-    animation: fadeInWord 1s forwards; 
-    animation-delay: var(--delay);
-    opacity: 0;
+    animation: rotY var(--animation-duration) linear infinite reverse;
+    animation-delay: var(--animation-delay);
 }
-@keyframes orbit {
-    0% { transform: translate(-50%, -50%) rotate(var(--deg)) translateX(var(--dist)) rotate(calc(var(--deg) * -1)); }
-    100% { transform: translate(-50%, -50%) rotate(calc(var(--deg) + 360deg)) translateX(var(--dist)) rotate(calc(0deg - var(--deg) - 360deg)); }
-}
-@keyframes fadeInWord {
-    from { opacity: 0; transform: scale(0.6); }
-    to { opacity: 1; transform: scale(1); }
+@keyframes rotY {
+    0% { transform: rotateY(0deg); }
+    100% { transform: rotateY(360deg); }
 }
