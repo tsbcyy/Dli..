@@ -1,4 +1,4 @@
-// ---------- 1. 悬浮祝福语 ----------
+// ---------- 1. 悬浮祝福语（使用现在的生日祝福语） ----------
 var words = [
     '生日快乐', '万事胜意', '平安喜乐', '前程似锦', 
     '岁岁常欢愉', '年年皆胜意', '未来可期', '所愿皆成真',
@@ -23,9 +23,13 @@ const titleGroups = [
     { text: "祝你生日快乐\n未来可期\n不负心中热爱" }
 ];
 
-function randomNum(min, max) { return (Math.random() * (max - min + 1) + min).toFixed(2); }
+// ---------- 3. 您提供的随机数函数 ----------
+function randomNum(min, max) {
+    var num = (Math.random() * (max - min + 1) + min).toFixed(2);
+    return num;
+}
 
-// ---------- 3. DOM 元素 ----------
+// ---------- 4. DOM 元素 ----------
 const video = document.getElementById('videofilm');
 const bgMusic = document.getElementById('bg-music');
 const container = document.querySelector('.container');
@@ -48,7 +52,7 @@ let bgParticles = [];
 const isMobile = window.innerWidth <= 600;
 const loadManager = { videoReady: false, audioReady: false, wordsReady: false, isAllReady: false };
 
-// ---------- 4. 主标题逐字显现 ----------
+// ---------- 5. 主标题逐字显现 ----------
 function updateTitle(text) {
     if (charInterval) clearInterval(charInterval);
     mainTitleEl.innerHTML = '';
@@ -70,7 +74,7 @@ function updateTitle(text) {
     }, 70);
 }
 
-// ---------- 5. 背景小粒子 ----------
+// ---------- 6. 背景小粒子 ----------
 function initBgParticles() {
     const W = window.innerWidth, H = window.innerHeight;
     bgParticles = [];
@@ -96,41 +100,46 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 6. 预加载悬浮词（CSS驱动公转，半径35-45vw） ----------
+// ---------- 7. 【核心】使用您的模板生成悬浮词（居中散布 + 半径35-45vw） ----------
 function preloadRandomWords() {
     if (!container) return;
     container.innerHTML = '';
     let f = document.createDocumentFragment();
-    words.forEach((w, index) => {
+
+    words.forEach(w => {
         let word_box = document.createElement('div');
         let word = document.createElement('div');
         word.innerText = w;
         word.classList.add('word');
         word.style.color = '#BAABDA';
         word.style.fontFamily = '楷体';
-        word.style.fontSize = isMobile ? '14px' : '18px';
+        word.style.fontSize = isMobile ? '14px' : '20px';
         word_box.classList.add('word-box');
 
-        // 给每个词分配半径（35-45vw）和初始角度
-        let dist = randomNum(35, 45) + 'vw';
-        let deg = randomNum(0, 360) + 'deg';
-        let speed = randomNum(8, 15) + 's';
-        let delay = (index * 0.15) + 's';
+        // 【核心】以屏幕中心为原点，半径 35-45vw 均匀散布
+        // 使用 margin-top 和 margin-left 偏移，配合 translate(-50%, -50%) 居中锚点
+        let dist = parseFloat(randomNum(35, 45));
+        let angle = parseFloat(randomNum(0, 360));
+        // 将极坐标转换为直角坐标偏移量（vw单位）
+        let rad = angle * Math.PI / 180;
+        let offsetX = Math.cos(rad) * dist;
+        let offsetY = Math.sin(rad) * dist;
 
-        word_box.style.setProperty("--dist", dist);
-        word_box.style.setProperty("--deg", deg);
-        word_box.style.setProperty("--speed", speed);
-        word_box.style.setProperty("--delay", delay);
+        word_box.style.setProperty("--margin-top", offsetY + 'vh');
+        word_box.style.setProperty("--margin-left", offsetX + 'vw');
+        word_box.style.setProperty("--animation-duration", randomNum(8, 20) + 's');
+        word_box.style.setProperty("--animation-delay", randomNum(-20, 0) + 's');
 
         word_box.appendChild(word);
         f.appendChild(word_box);
     });
+
     container.appendChild(f);
     loadManager.wordsReady = true;
     checkAllLoaded();
 }
 
-// ---------- 7. 视频原生下载 ----------
+// ---------- 8. 视频原生下载 ----------
 function preloadVideoStandard() {
     video.src = 'video/skystar.mp4';
     video.load();
@@ -149,14 +158,14 @@ function preloadVideoStandard() {
     }, 20000);
 }
 
-// ---------- 8. 加载完成检查 ----------
+// ---------- 9. 加载完成检查 ----------
 function checkAllLoaded() {
     if (loadManager.videoReady && loadManager.audioReady && loadManager.wordsReady) {
         loadManager.isAllReady = true;
     }
 }
 
-// ---------- 9. 大结局 ----------
+// ---------- 10. 大结局 ----------
 function showEnding(name, month) {
     if (isEndingShown) return;
     isEndingShown = true;
@@ -165,7 +174,7 @@ function showEnding(name, month) {
     clearInterval(autoTimer);
 }
 
-// ---------- 10. 开始按钮 ----------
+// ---------- 11. 开始按钮 ----------
 startBtn.addEventListener('click', function() {
     const name = userNameInput.value.trim() || '亲爱的';
     const month = userMonthInput.value.trim() || '每一';
@@ -191,7 +200,7 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 11. 主流程 ----------
+// ---------- 12. 主流程 ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
@@ -237,7 +246,7 @@ function startMain(name, month) {
             if (container) {
                 // 强制重置所有可能被覆盖的属性
                 container.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; z-index: 9999 !important;';
-                // 添加 show 类，触发 CSS 中的 orbit 动画
+                // 添加 show 类，触发 CSS 动画
                 setTimeout(() => {
                     container.classList.add('show');
                 }, 50);
@@ -247,7 +256,7 @@ function startMain(name, month) {
     }, 5000);
 }
 
-// ---------- 12. 页面启动 ----------
+// ---------- 13. 页面启动 ----------
 function preloadAll() {
     preloadVideoStandard();
     preloadRandomWords();
@@ -274,7 +283,7 @@ function preloadAll() {
     if (bgMusic.readyState >= 4) { loadManager.audioReady = true; checkAllLoaded(); }
 }
 
-// ---------- 13. 启动 ----------
+// ---------- 14. 启动 ----------
 resizeCanvas();
 preloadAll();
 
