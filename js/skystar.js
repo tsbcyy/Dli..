@@ -226,20 +226,28 @@ function startMain(name, month) {
                 }, 500);
             }
             
-            // 【终极修复】强制让悬浮词显示出来
+           // 【终极绝杀】强制显示所有悬浮词的 DOM，不管三七二十一
             if (container) {
-                // 1. 直接覆盖显示属性
-                container.style.display = 'block !important';
-                // 2. 清除任何可能残留的隐藏类
-                container.classList.remove('hidden');
-                container.classList.remove('show');
-                // 3. 重新激活动画
-                setTimeout(() => {
-                    container.classList.add('show');
-                }, 50);
+                // 1. 强制让容器可见
+                container.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; z-index: 9999 !important;';
                 
-                // 4. 额外保险：打印日志确认代码执行了
-                console.log('悬空祝福语已强制触发显示');
+                // 2. 强制让容器里每一个 word-box 及其内部的 word 都可见并触发动画
+                const boxes = container.querySelectorAll('.word-box');
+                boxes.forEach((box, index) => {
+                    box.style.cssText = 'opacity: 1 !important; visibility: visible !important;';
+                    // 如果动画没启动，强行触发
+                    const word = box.querySelector('.word');
+                    if (word) {
+                        word.style.cssText = 'opacity: 1 !important; visibility: visible !important;';
+                        // 重新设置 animation 属性，强制重启动画
+                        const speed = box.style.getPropertyValue('--speed') || '15s';
+                        const delay = box.style.getPropertyValue('--delay') || '0s';
+                        box.style.animation = 'none';
+                        box.offsetHeight; // 强制回流
+                        box.style.animation = `orbit ${speed} linear infinite ${delay}`;
+                    }
+                });
+                console.log('✅ 悬浮词已强行显示，数量：' + boxes.length);
             }
         }
     }, 5000);
