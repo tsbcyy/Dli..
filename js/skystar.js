@@ -95,11 +95,11 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环（【尺寸调大】手机 2.5px，电脑 4.0px） ----------
+// ---------- 7. 动画循环（【修改】粒子尺寸调小一号） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
-    // 稍微放大点，配合 step=1 的密度，看起来像发光的粉红颗粒
-    const radius = isMobile ? 2.5 : 4.0; 
+    // 手机从 2.5 调小到 2.0px，电脑从 4.0 调小到 3.0px
+    const radius = isMobile ? 2.0 : 3.0; 
     textCtx.shadowColor = '#FFB7C5';
     textCtx.shadowBlur = 6; 
     particles.forEach(p => {
@@ -134,7 +134,7 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 9. 预加载悬浮词 ----------
+// ---------- 9. 预加载悬浮词（【修改】公转半径往外扩） ----------
 function preloadRandomWords() {
     container.innerHTML = '';
     let f = document.createDocumentFragment();
@@ -145,7 +145,8 @@ function preloadRandomWords() {
         word.style.fontSize = isMobile ? '14px' : '18px'; 
         word.style.color = '#FFB7C5';
         word_box.classList.add('word-box');
-        let dist = randomNum(15, 35) + 'vw'; 
+        // 半径从 15~35 扩大到 20~45，扩散范围更广
+        let dist = randomNum(20, 45) + 'vw'; 
         let deg = (index * 15) + 'deg'; 
         let speed = randomNum(15, 25) + 's'; 
         let delay = (0.2 + index * 0.15) + 's'; 
@@ -161,24 +162,17 @@ function preloadRandomWords() {
     checkAllLoaded();
 }
 
-// ---------- 10. 【核心修改】视频改用原生下载模式 ----------
+// ---------- 10. 原生视频下载（保持不变） ----------
 function preloadVideoStandard() {
-    // 直接设置 src，利用浏览器原生缓存机制
     video.src = 'video/skystar.mp4';
-    // 触发预加载
     video.load();
-    // 静音激活一次，让浏览器开始下载（符合移动端策略）
     video.muted = true;
     video.play().then(() => video.pause()).catch(()=>{});
-    
-    // 监听资源加载完成事件
     video.addEventListener('canplaythrough', function onReady() {
         video.removeEventListener('canplaythrough', onReady);
         loadManager.videoReady = true;
         checkAllLoaded();
     });
-    
-    // 网络极慢情况下的超时放行（20秒）
     setTimeout(() => {
         if (!loadManager.videoReady) {
             loadManager.videoReady = true;
@@ -230,7 +224,7 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 14. 主流程 ----------
+// ---------- 14. 主流程（保持不变） ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
@@ -239,11 +233,9 @@ function startMain(name, month) {
     generateParticles(titleGroups[0].text);
     animateText();
 
-    // 唤醒视频手势
     video.muted = true;
     video.play().catch(()=>{});
     
-    // 音乐取消静音
     bgMusic.muted = false;
     bgMusic.play().catch(()=>{});
 
@@ -257,7 +249,6 @@ function startMain(name, month) {
             return;
         }
 
-        // 第4句话触发大招
         if (index === 3) {
             video.style.display = 'block';
             video.muted = false;
@@ -268,14 +259,11 @@ function startMain(name, month) {
     }, 5000);
 }
 
-// ---------- 15. 页面启动（音乐一打开即静音播放） ----------
+// ---------- 15. 页面启动（保持不变） ----------
 function preloadAll() {
-    // 1. 原生下载视频
     preloadVideoStandard();
-    // 2. 预构建悬浮祝福语
     preloadRandomWords();
 
-    // 3. 音乐一进页面立即静音播放
     bgMusic.muted = true; 
     bgMusic.play().catch(()=>{});
     bgMusic.addEventListener('canplaythrough', () => { loadManager.audioReady = true; checkAllLoaded(); });
