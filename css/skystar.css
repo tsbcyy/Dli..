@@ -78,35 +78,27 @@ body { display: flex; align-items: center; justify-content: center; position: re
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     overflow: hidden; z-index: 5; pointer-events: none;
-    /* 默认隐藏，但后面将用 JS 强制覆盖 */
     display: none;
 }
-/* 这个类会在触发时被添加，并且强制显示 */
 .container.show {
     display: block !important;
     opacity: 1 !important;
     visibility: visible !important;
 }
-:root { --dist: 20vw; --deg: 0deg; --speed: 10s; --delay: 0s; }
 .word-box {
     position: absolute; top: 50%; left: 50%;
-    animation: orbit var(--speed) linear infinite;
-    animation-delay: var(--delay); 
+    /* 内联样式已经在 JS 中设置，无需额外动画 */
 }
 .word-box .word {
     position: absolute;
-    color: #FFB7C5; font-family: '楷体';
-    text-shadow: 0 0 8px rgba(255, 105, 180, 0.6);
-    animation: fadeInWord 0.8s forwards; 
-    animation-delay: var(--delay); opacity: 0;
-}
-@keyframes orbit {
-    0% { transform: translate(-50%, -50%) rotate(var(--deg)) translateX(var(--dist)) rotate(calc(var(--deg) * -1)); }
-    100% { transform: translate(-50%, -50%) rotate(calc(var(--deg) + 360deg)) translateX(var(--dist)) rotate(calc(0deg - var(--deg) - 360deg)); }
+    color: #BAABDA;
+    font-family: '楷体';
+    text-shadow: 0 0 8px rgba(186, 171, 218, 0.5);
+    /* 淡入动画由 JS 动态添加 */
 }
 @keyframes fadeInWord {
-    from { opacity: 0; transform: scale(0.6); }
-    to { opacity: 1; transform: scale(1); }
+    from { opacity: 0; transform: scale(0.5) rotateY(30deg); }
+    to { opacity: 1; transform: scale(1) rotateY(0deg); }
 }
 
 /* --- 完结层 --- */
