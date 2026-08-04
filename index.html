@@ -11,10 +11,10 @@
   <body>
     <div id="entry-screen">
       <div class="entry-box">
-        <div class="entry-title">🌟 专属祝福</div>
-        <div class="entry-sub">定制星光璀璨的一刻</div>
+        <div class="entry-title">🌟 专属祝福生成器</div>
+        <div class="entry-sub">为亲爱的TA，定制星光璀璨的一刻</div>
         <div class="input-group">
-          <label>你的的昵称</label>
+          <label>TA 的昵称</label>
           <input type="text" id="user-name" placeholder="请输入名字" class="entry-input">
         </div>
         <div class="input-group">
@@ -31,12 +31,13 @@
 
     <div id="main-screen" style="display:none;">
       <div id="static-bg"></div>
+      <!-- 删除原本 three 个标题，保留一个空的主标题容器 -->
+      <div id="main-title" class="main-title"></div>
+      
       <video id="videofilm" poster="img/skystar2.jpg" loop style="display:none;" muted playsinline webkit-playsinline x5-video-player-type="h5" x5-video-player-fullscreen="true" preload="auto">
         <source src="video/skystar.mp4" type="video/mp4">
       </video>
       <canvas id="particles-canvas"></canvas>
-      <canvas id="text-canvas"></canvas>
-      <!-- 重点：audio 标签加上 autoplay muted，一打开页面就静音播放 -->
       <audio id="bg-music" src="video/晴天.mp3" autoplay muted preload="auto"></audio>
       <div class="container" style="display:none;"></div>
     </div>
