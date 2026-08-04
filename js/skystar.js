@@ -40,11 +40,14 @@ const userMonthInput = document.getElementById('user-month');
 const endingDynamic = document.getElementById('ending-dynamic');
 const mainTitleEl = document.getElementById('main-title');
 
-// 移除旧HTML三行标题（仅防万一）
+// 移除旧HTML三行标题
 document.querySelectorAll('.textone, .texttwo, .textthree').forEach(el => el.remove());
 
 let switchCount = 0, isEndingShown = false, autoTimer, charInterval = null;
 let bgParticles = [];
+let floatingItems = []; // 存储悬浮词对象
+let floatAnimId = null;
+
 const isMobile = window.innerWidth <= 600;
 const loadManager = { videoReady: false, audioReady: false, wordsReady: false, isAllReady: false };
 
@@ -96,39 +99,70 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 6. 预加载悬浮词 ----------
+// ---------- 6. 预加载悬浮词（JS驱动） ----------
 function preloadRandomWords() {
     if (!container) return;
     container.innerHTML = '';
-    // 预先确保它是隐藏的，等待触发
-    container.style.display = 'none';
-    container.classList.remove('show');
-    let f = document.createDocumentFragment();
+    // 清除之前的动画
+    if (floatAnimId) cancelAnimationFrame(floatAnimId);
+    floatingItems = [];
+
     words.forEach((w, index) => {
-        let word_box = document.createElement('div');
-        let word = document.createElement('div');
-        word.innerText = w; word.classList.add('word');
-        word.style.fontSize = isMobile ? '14px' : '18px'; 
-        word.style.color = '#FFB7C5';
-        word_box.classList.add('word-box');
-        // 【修改】悬浮祝福语半径从 45-60 调整为 30-50
-        let dist = randomNum(30, 50) + 'vw'; 
-        let deg = (index * 15) + 'deg'; 
-        let speed = randomNum(15, 25) + 's'; 
-        let delay = (0.2 + index * 0.15) + 's'; 
-        word_box.style.setProperty("--dist", dist);
-        word_box.style.setProperty("--deg", deg);
-        word_box.style.setProperty("--speed", speed);
-        word_box.style.setProperty("--delay", delay);
-        word_box.appendChild(word);
-        f.appendChild(word_box);
+        let el = document.createElement('div');
+        el.style.position = 'absolute';
+        el.style.top = '50%';
+        el.style.left = '50%';
+        el.style.color = '#FFB7C5';
+        el.style.fontFamily = '楷体';
+        el.style.fontSize = isMobile ? '14px' : '18px';
+        el.style.textShadow = '0 0 8px rgba(255,105,180,0.6)';
+        el.style.transform = 'translate(-50%, -50%)';
+        el.innerText = w;
+        // 初始透明度0，等下淡入
+        el.style.opacity = 0;
+        // 随机半径 30-50 vw
+        let dist = parseFloat(randomNum(30, 50));
+        let deg = index * 15; // 初始角度
+        let speed = parseFloat(randomNum(15, 25)); // 秒转一圈
+        let delay = 0.2 + index * 0.15; // 延迟淡入
+        // 添加到容器
+        container.appendChild(el);
+        floatingItems.push({ el, dist, deg, speed, delay, startTime: Date.now() + delay * 1000 });
     });
-    container.appendChild(f);
+
     loadManager.wordsReady = true;
     checkAllLoaded();
 }
 
-// ---------- 7. 视频原生下载 ----------
+// ---------- 7. 驱动悬浮词旋转 ----------
+function animateFloating() {
+    if (!container || container.style.display === 'none') {
+        floatAnimId = requestAnimationFrame(animateFloating);
+        return;
+    }
+    const now = Date.now();
+    floatingItems.forEach(item => {
+        if (now < item.startTime) {
+            // 还没到显示时间
+            item.el.style.opacity = 0;
+            return;
+        }
+        // 淡入
+        if (item.el.style.opacity !== '1') {
+            item.el.style.opacity = 1;
+        }
+        let elapsed = (now - item.startTime) / 1000;
+        let angle = item.deg + (elapsed / item.speed) * 360;
+        let rad = angle * Math.PI / 180;
+        let x = Math.cos(rad) * item.dist;
+        let y = Math.sin(rad) * item.dist;
+        // 使用 vw 和 vh 单位，保证自适应
+        item.el.style.transform = `translate(-50%, -50%) translate(${x}vw, ${y}vh)`;
+    });
+    floatAnimId = requestAnimationFrame(animateFloating);
+}
+
+// ---------- 8. 视频原生下载 ----------
 function preloadVideoStandard() {
     video.src = 'video/skystar.mp4';
     video.load();
@@ -147,14 +181,14 @@ function preloadVideoStandard() {
     }, 20000);
 }
 
-// ---------- 8. 加载完成检查 ----------
+// ---------- 9. 加载完成检查 ----------
 function checkAllLoaded() {
     if (loadManager.videoReady && loadManager.audioReady && loadManager.wordsReady) {
         loadManager.isAllReady = true;
     }
 }
 
-// ---------- 9. 大结局 ----------
+// ---------- 10. 大结局 ----------
 function showEnding(name, month) {
     if (isEndingShown) return;
     isEndingShown = true;
@@ -163,7 +197,7 @@ function showEnding(name, month) {
     clearInterval(autoTimer);
 }
 
-// ---------- 10. 开始按钮 ----------
+// ---------- 11. 开始按钮 ----------
 startBtn.addEventListener('click', function() {
     const name = userNameInput.value.trim() || '亲爱的';
     const month = userMonthInput.value.trim() || '每一';
@@ -189,7 +223,7 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 11. 主流程 ----------
+// ---------- 12. 主流程 ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
@@ -227,24 +261,20 @@ function startMain(name, month) {
                 }, 500);
             }
             
-            // 【核心强制显示悬浮词】
+            // 显示悬浮词（容器已有内容，只需显示）
             if (container) {
-                // 1. 直接覆盖所有样式，强制显示
-                container.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; z-index: 9999 !important;';
-                // 2. 添加 show 类，触发 CSS 动画
-                setTimeout(() => {
-                    container.classList.add('show');
-                    console.log('✅ 悬浮词已触发显示');
-                }, 50);
+                container.style.display = 'block';
+                // 启动动画
+                if (!floatAnimId) animateFloating();
             }
         }
     }, 5000);
 }
 
-// ---------- 12. 页面启动 ----------
+// ---------- 13. 页面启动 ----------
 function preloadAll() {
     preloadVideoStandard();
-    preloadRandomWords();
+    preloadRandomWords(); // 预生成悬浮词（此时容器隐藏）
     
     // 音乐开始就尝试播放
     bgMusic.muted = false;
@@ -268,7 +298,7 @@ function preloadAll() {
     if (bgMusic.readyState >= 4) { loadManager.audioReady = true; checkAllLoaded(); }
 }
 
-// ---------- 13. 启动 ----------
+// ---------- 14. 启动 ----------
 resizeCanvas();
 preloadAll();
 
