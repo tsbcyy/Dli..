@@ -55,7 +55,7 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ---------- 5. 粒子提取（保持 step=1） ----------
+// ---------- 5. 粒子提取（强制 step=1） ----------
 function getTextPoints(text) {
     const fontSize = Math.min(W * 0.08, 40);
     const lineHeight = fontSize * 1.3;
@@ -72,7 +72,7 @@ function getTextPoints(text) {
     const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
     const data = imageData.data;
     const points = [];
-    const step = 1; // 【保持】step=1 不变
+    const step = 1; // 绝对保留 step=1
     for (let y = 0; y < offCanvas.height; y += step) {
         for (let x = 0; x < offCanvas.width; x += step) {
             const idx = (y * offCanvas.width + x) * 4;
@@ -95,17 +95,25 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环（【精准修改】手机端粒子大小调为 2.0px） ----------
+// ---------- 7. 动画循环（【修复】优化手机端流畅度） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
-    // 【修改】手机端设为 2.0px，电脑端设为 3.5px 兼顾清晰度
     const radius = isMobile ? 2.0 : 3.5; 
     textCtx.shadowColor = '#FFB7C5';
-    textCtx.shadowBlur = 6; 
+    textCtx.shadowBlur = 6;
+    
+    // 针对手机的优化：减少绘制的粒子数量（通过增大移动阈值）或加速缓动
+    const speedFactor = isMobile ? 0.12 : 0.08; // 手机端略微加快移动到目标位置的速度
+    const threshold = isMobile ? 1.0 : 0.5;    // 手机端放宽停止判断阈值，减少计算量
+    
     particles.forEach(p => {
         const dx = p.tx - p.x, dy = p.ty - p.y;
-        if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) { p.x += dx * 0.08; p.y += dy * 0.08; } 
-        else { p.x = p.tx; p.y = p.ty; }
+        if (Math.abs(dx) > threshold || Math.abs(dy) > threshold) { 
+            p.x += dx * speedFactor; 
+            p.y += dy * speedFactor; 
+        } else { 
+            p.x = p.tx; p.y = p.ty; 
+        }
         textCtx.beginPath(); textCtx.arc(p.x, p.y, radius, 0, Math.PI * 2);
         textCtx.fillStyle = p.color; textCtx.fill();
     });
@@ -134,7 +142,7 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 9. 预加载悬浮词（【精准修改】公转半径拉到 35-50vw） ----------
+// ---------- 9. 预加载悬浮词（范围 35-50vw） ----------
 function preloadRandomWords() {
     container.innerHTML = '';
     let f = document.createDocumentFragment();
@@ -145,7 +153,6 @@ function preloadRandomWords() {
         word.style.fontSize = isMobile ? '14px' : '18px'; 
         word.style.color = '#FFB7C5';
         word_box.classList.add('word-box');
-        // 【修改】范围从 30-45 拉大到 35-50，扩散更远
         let dist = randomNum(35, 50) + 'vw'; 
         let deg = (index * 15) + 'deg'; 
         let speed = randomNum(15, 25) + 's'; 
@@ -162,17 +169,19 @@ function preloadRandomWords() {
     checkAllLoaded();
 }
 
-// ---------- 10. 原生视频下载（保持不变） ----------
+// ---------- 10. 【核心修改】视频改为“下载缓存 + 全程无声” ----------
 function preloadVideoStandard() {
     video.src = 'video/skystar.mp4';
     video.load();
-    video.muted = true;
-    video.play().then(() => video.pause()).catch(()=>{});
+    // 强制无声，永不取消静音
+    video.muted = true; 
+    // 预加载至可流畅播放
     video.addEventListener('canplaythrough', function onReady() {
         video.removeEventListener('canplaythrough', onReady);
         loadManager.videoReady = true;
         checkAllLoaded();
     });
+    // 超时放行
     setTimeout(() => {
         if (!loadManager.videoReady) {
             loadManager.videoReady = true;
@@ -224,7 +233,7 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 14. 主流程（保持不变） ----------
+// ---------- 14. 主流程（视频全程无声） ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
@@ -233,9 +242,7 @@ function startMain(name, month) {
     generateParticles(titleGroups[0].text);
     animateText();
 
-    video.muted = true;
-    video.play().catch(()=>{});
-    
+    // 【音乐】取消静音（音乐是单独通道，与视频无关）
     bgMusic.muted = false;
     bgMusic.play().catch(()=>{});
 
@@ -250,18 +257,19 @@ function startMain(name, month) {
         }
 
         if (index === 3) {
+            // 【视频】显示且全程保持 muted（无声），循环播放
             video.style.display = 'block';
-            video.muted = false;
             video.loop = true;
+            // 不需要取消静音，muted 始终为 true
             video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
             container.style.display = 'block';
         }
     }, 5000);
 }
 
-// ---------- 15. 页面启动（保持不变） ----------
+// ---------- 15. 页面启动 ----------
 function preloadAll() {
-    preloadVideoStandard();
+    preloadVideoStandard(); // 视频无声下载预加载
     preloadRandomWords();
 
     bgMusic.muted = true; 
