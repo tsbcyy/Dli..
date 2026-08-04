@@ -47,6 +47,7 @@ let W, H, particles = [], bgParticles = [];
 let switchCount = 0, isEndingShown = false, autoTimer;
 const isMobile = window.innerWidth <= 600;
 const loadManager = { videoReady: false, audioReady: false, wordsReady: false, isAllReady: false };
+let loadLog = ''; // 记录加载状态
 
 // ---------- 4. 尺寸适配 ----------
 function resizeCanvas() {
@@ -55,7 +56,7 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ---------- 5. 粒子提取（强制 step=1） ----------
+// ---------- 5. 粒子提取（step 改为 1.5，降低密度） ----------
 function getTextPoints(text) {
     const fontSize = Math.min(W * 0.08, 40);
     const lineHeight = fontSize * 1.3;
@@ -72,7 +73,8 @@ function getTextPoints(text) {
     const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
     const data = imageData.data;
     const points = [];
-    const step = 1; // 坚决保持 step=1
+    // 【核心修改】step = 1.5，比 1.0 稀疏，比 2.0 细腻，平衡密度
+    const step = 1.5; 
     for (let y = 0; y < offCanvas.height; y += step) {
         for (let x = 0; x < offCanvas.width; x += step) {
             const idx = (y * offCanvas.width + x) * 4;
@@ -95,22 +97,16 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环（【核心优化】降低手机端绘制负载） ----------
+// ---------- 7. 动画循环（粒子调大，移除中心挖空） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
-    const radius = isMobile ? 2.0 : 3.5; 
+    // 【核心修改】手机端 2.5px（调大），电脑端 4.0px（调大）
+    const radius = isMobile ? 2.5 : 4.0; 
     textCtx.shadowColor = '#FFB7C5';
     textCtx.shadowBlur = 6;
     
-    // 针对低端手机优化：跳过部分中心区域粒子（减少约30%绘制量）
-    const skip = isMobile;
-    const skipRadius = W * 0.08; // 跳过中心附近 8% 宽度的粒子，降低密集区负担
-    
+    // 【移除】不再跳过中心区域粒子，保证文字完整无正方形空白
     particles.forEach(p => {
-        if (skip && Math.abs(p.x - W/2) < skipRadius && Math.abs(p.y - H/2) < skipRadius) {
-            // 跳过中心区域部分粒子，不影响整体文字形状
-            return;
-        }
         const dx = p.tx - p.x, dy = p.ty - p.y;
         if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) { 
             p.x += dx * 0.08; 
@@ -146,7 +142,7 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 9. 预加载悬浮词（半径调至 45-60vw） ----------
+// ---------- 9. 预加载悬浮词（半径 45-60vw） ----------
 function preloadRandomWords() {
     container.innerHTML = '';
     let f = document.createDocumentFragment();
@@ -157,7 +153,6 @@ function preloadRandomWords() {
         word.style.fontSize = isMobile ? '14px' : '18px'; 
         word.style.color = '#FFB7C5';
         word_box.classList.add('word-box');
-        // 【修改】半径范围 45-60vw，向外扩散更远
         let dist = randomNum(45, 60) + 'vw'; 
         let deg = (index * 15) + 'deg'; 
         let speed = randomNum(15, 25) + 's'; 
@@ -171,22 +166,31 @@ function preloadRandomWords() {
     });
     container.appendChild(f);
     loadManager.wordsReady = true;
+    console.log('✅ 悬浮词已就绪');
     checkAllLoaded();
 }
 
-// ---------- 10. 视频无声下载预加载（全程作背景板） ----------
+// ---------- 10. 视频无声下载预加载 ----------
 function preloadVideoStandard() {
     video.src = 'video/skystar.mp4';
     video.load();
-    video.muted = true; // 始终静音
+    video.muted = true; // 始终静音（背景板）
     video.addEventListener('canplaythrough', function onReady() {
         video.removeEventListener('canplaythrough', onReady);
         loadManager.videoReady = true;
+        console.log('✅ 视频已就绪 (canplaythrough)');
         checkAllLoaded();
     });
+    // 如果视频较小，可能快速就绪，提前检查一次
+    if (video.readyState >= 4) {
+        loadManager.videoReady = true;
+        console.log('✅ 视频已就绪 (readyState)');
+        checkAllLoaded();
+    }
     setTimeout(() => {
         if (!loadManager.videoReady) {
             loadManager.videoReady = true;
+            console.log('⚠️ 视频加载超时，强制放行');
             checkAllLoaded();
         }
     }, 20000);
@@ -196,6 +200,7 @@ function preloadVideoStandard() {
 function checkAllLoaded() {
     if (loadManager.videoReady && loadManager.audioReady && loadManager.wordsReady) {
         loadManager.isAllReady = true;
+        console.log('🎉 全部资源加载完毕！');
     }
 }
 
@@ -219,13 +224,24 @@ startBtn.addEventListener('click', function() {
     }
     startBtn.style.display = 'none';
     loadingStatus.style.display = 'flex';
+    loadingStatus.innerHTML = '<div class="loader-small"></div><span>正在加载星空与旋律... (视频/音乐/词)</span>';
 
     const waitForLoad = setInterval(() => {
         if (loadManager.isAllReady) {
             clearInterval(waitForLoad);
             startMain(name, month);
+        } else {
+            // 更新加载状态提示
+            let status = '加载中... ';
+            if (loadManager.videoReady) status += '✅视频 ';
+            else status += '⏳视频 ';
+            if (loadManager.audioReady) status += '✅音乐 ';
+            else status += '⏳音乐 ';
+            if (loadManager.wordsReady) status += '✅词 ';
+            else status += '⏳词 ';
+            loadingStatus.innerHTML = `<div class="loader-small"></div><span>${status}</span>`;
         }
-    }, 300);
+    }, 500);
     setTimeout(() => {
         if (!loadManager.isAllReady) {
             clearInterval(waitForLoad);
@@ -235,7 +251,7 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 14. 主流程（背景板视频 + 音乐取消静音） ----------
+// ---------- 14. 主流程（音乐即时取消静音，视频背景板） ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
@@ -244,11 +260,16 @@ function startMain(name, month) {
     generateParticles(titleGroups[0].text);
     animateText();
 
-    // 音乐取消静音（已经通过 HTML 自动播放过，取消静音即出声）
+    // 音乐：直接取消静音并播放，消除延迟
     bgMusic.muted = false;
-    bgMusic.play().catch(()=>{});
+    bgMusic.play().then(() => {
+        console.log('🎵 音乐播放中...');
+    }).catch(() => {
+        console.warn('⚠️ 音乐播放被拦截，尝试重新激活');
+        // 若被拦截，等用户触摸时再试
+    });
 
-    // 视频预激活（准备作为背景板）
+    // 视频预激活（确保后续能无声播放）
     video.muted = true;
     video.play().then(() => video.pause()).catch(() => {});
 
@@ -263,31 +284,60 @@ function startMain(name, month) {
         }
 
         if (index === 3) {
-            // 背景板视频：全程静音、循环、无控制条
+            // 背景板视频：无声、循环
             video.style.display = 'block';
             video.loop = true;
-            video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
+            // 检查是否已加载完成，避免等待 canplaythrough 延迟
+            if (video.readyState >= 4) {
+                video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
+            } else {
+                // 若未就绪，等待一下再播
+                setTimeout(() => {
+                    video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
+                }, 500);
+            }
             container.style.display = 'block';
         }
     }, 5000);
 }
 
-// ---------- 15. 页面启动（确保音乐静音激活） ----------
+// ---------- 15. 页面启动（音乐静音激活 + 实时加载反馈） ----------
 function preloadAll() {
+    console.log('🚀 开始加载资源...');
     preloadVideoStandard();
     preloadRandomWords();
 
-    // 音频：自带 autoplay muted 属性，但再次主动激活
-    bgMusic.play().catch(()=>{}); 
-    bgMusic.addEventListener('canplaythrough', () => { loadManager.audioReady = true; checkAllLoaded(); });
-    setTimeout(() => { if(!loadManager.audioReady) { loadManager.audioReady = true; checkAllLoaded(); } }, 8000);
+    // 音频：虽然 HTML 有 autoplay muted，但主动触发一次确保激活
+    bgMusic.play().catch(() => {
+        console.log('⏳ 音乐静音启动中...');
+    }); 
+    bgMusic.addEventListener('canplaythrough', () => { 
+        loadManager.audioReady = true; 
+        console.log('✅ 音乐已就绪');
+        checkAllLoaded(); 
+    });
+    // 检查是否已经就绪
+    if (bgMusic.readyState >= 4) {
+        loadManager.audioReady = true;
+        checkAllLoaded();
+    }
+    setTimeout(() => { 
+        if(!loadManager.audioReady) { 
+            loadManager.audioReady = true; 
+            console.log('⚠️ 音乐加载超时，强制放行');
+            checkAllLoaded(); 
+        } 
+    }, 8000);
 }
 
 // ---------- 16. 启动 ----------
 resizeCanvas();
 preloadAll();
 
-// 额外：当用户触摸屏幕时，确保音乐取消静音后能正常播放
+// 当用户触摸屏幕时，确保音乐取消静音后能立即播放
 document.addEventListener('touchstart', function() {
-    if (bgMusic.muted) { bgMusic.muted = false; bgMusic.play().catch(()=>{}); }
+    if (bgMusic.muted) { 
+        bgMusic.muted = false; 
+        bgMusic.play().catch(()=>{}); 
+    }
 });
