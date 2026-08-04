@@ -1,4 +1,4 @@
-// ---------- 1. 悬浮祝福语（使用现在的生日祝福语） ----------
+// ---------- 1. 悬浮祝福语（生日祝福内容） ----------
 var words = [
     '生日快乐', '万事胜意', '平安喜乐', '前程似锦', 
     '岁岁常欢愉', '年年皆胜意', '未来可期', '所愿皆成真',
@@ -23,7 +23,7 @@ const titleGroups = [
     { text: "祝你生日快乐\n未来可期\n不负心中热爱" }
 ];
 
-// ---------- 3. 您提供的随机数函数 ----------
+// ---------- 3. 您提供的随机函数 ----------
 function randomNum(min, max) {
     var num = (Math.random() * (max - min + 1) + min).toFixed(2);
     return num;
@@ -100,7 +100,7 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 7. 【核心】使用您的模板生成悬浮词（居中散布 + 半径35-45vw） ----------
+// ---------- 7. 预加载悬浮词（使用您的模板 + 居中散布 35-45vw） ----------
 function preloadRandomWords() {
     if (!container) return;
     container.innerHTML = '';
@@ -116,11 +116,9 @@ function preloadRandomWords() {
         word.style.fontSize = isMobile ? '14px' : '20px';
         word_box.classList.add('word-box');
 
-        // 【核心】以屏幕中心为原点，半径 35-45vw 均匀散布
-        // 使用 margin-top 和 margin-left 偏移，配合 translate(-50%, -50%) 居中锚点
+        // 以屏幕中心为原点，半径 35-45vw 均匀散布
         let dist = parseFloat(randomNum(35, 45));
         let angle = parseFloat(randomNum(0, 360));
-        // 将极坐标转换为直角坐标偏移量（vw单位）
         let rad = angle * Math.PI / 180;
         let offsetX = Math.cos(rad) * dist;
         let offsetY = Math.sin(rad) * dist;
@@ -185,12 +183,15 @@ startBtn.addEventListener('click', function() {
     }
     startBtn.style.display = 'none';
     loadingStatus.style.display = 'flex';
+
+    // 等待所有资源加载完成
     const waitForLoad = setInterval(() => {
         if (loadManager.isAllReady) {
             clearInterval(waitForLoad);
             startMain(name, month);
         }
     }, 300);
+    // 超时保底
     setTimeout(() => {
         if (!loadManager.isAllReady) {
             clearInterval(waitForLoad);
@@ -206,18 +207,18 @@ function startMain(name, month) {
     mainScreen.style.display = 'block';
     initBgParticles();
     updateTitle(titleGroups[0].text);
-    
+
     // 音乐取消静音
     bgMusic.muted = false;
     bgMusic.play().catch(() => {
         bgMusic.muted = true;
         bgMusic.play();
     });
-    
+
     // 视频预激活
     video.muted = true;
     video.play().then(() => video.pause()).catch(() => {});
-    
+
     let index = 0;
     autoTimer = setInterval(() => {
         index++;
@@ -241,12 +242,10 @@ function startMain(name, month) {
             }
         }
 
-        // 【唯一改动】在第三次切换时（index === 2）释放悬浮祝福语
+        // 悬浮祝福语在第三次切换时（index === 2）显示
         if (index === 2) {
             if (container) {
-                // 强制重置所有可能被覆盖的属性
                 container.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; z-index: 9999 !important;';
-                // 添加 show 类，触发 CSS 动画
                 setTimeout(() => {
                     container.classList.add('show');
                 }, 50);
@@ -260,24 +259,24 @@ function startMain(name, month) {
 function preloadAll() {
     preloadVideoStandard();
     preloadRandomWords();
-    
-    // 音乐从一开始就尝试播放
+
+    // 音乐从一开始就尝试播放（静音启动）
     bgMusic.muted = false;
     bgMusic.play().then(() => {
-        loadManager.audioReady = true; 
+        loadManager.audioReady = true;
         checkAllLoaded();
     }).catch(() => {
         bgMusic.muted = true;
         bgMusic.play().catch(()=>{});
-        bgMusic.addEventListener('canplaythrough', () => { 
-            loadManager.audioReady = true; 
-            checkAllLoaded(); 
+        bgMusic.addEventListener('canplaythrough', () => {
+            loadManager.audioReady = true;
+            checkAllLoaded();
         });
-        setTimeout(() => { 
-            if(!loadManager.audioReady) { 
-                loadManager.audioReady = true; 
-                checkAllLoaded(); 
-            } 
+        setTimeout(() => {
+            if(!loadManager.audioReady) {
+                loadManager.audioReady = true;
+                checkAllLoaded();
+            }
         }, 8000);
     });
     if (bgMusic.readyState >= 4) { loadManager.audioReady = true; checkAllLoaded(); }
