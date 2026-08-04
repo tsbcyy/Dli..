@@ -43,7 +43,7 @@ const userNameInput = document.getElementById('user-name');
 const userMonthInput = document.getElementById('user-month');
 const endingDynamic = document.getElementById('ending-dynamic');
 
-// 获取三个独立的标题节点（用于隐藏，绝不删除）
+// 获取那三个多余的HTML标题节点
 const textone = document.querySelector('.textone');
 const texttwo = document.querySelector('.texttwo');
 const textthree = document.querySelector('.textthree');
@@ -60,7 +60,7 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ---------- 5. 粒子提取（保持 step=1.5） ----------
+// ---------- 5. 粒子提取（step=1.5） ----------
 function getTextPoints(text) {
     const fontSize = Math.min(W * 0.08, 40);
     const lineHeight = fontSize * 1.3;
@@ -100,7 +100,7 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环 ----------
+// ---------- 7. 动画循环（手机 2.5px） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
     const radius = isMobile ? 2.5 : 4.0; 
@@ -230,17 +230,26 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 14. 主流程（【纯净修复】仅用 CSS 隐藏多余标题） ----------
+// ---------- 14. 主流程（【强制物理消失】绝不在手机上残留） ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
 
-    // ========== 彻底隐藏那三个多余的HTML标题节点 ==========
-    // 只用 display: none 解决，绝对不删除DOM，不影响其他逻辑
-    if (textone) textone.style.display = 'none';
-    if (texttwo) texttwo.style.display = 'none';
-    if (textthree) textthree.style.display = 'none';
-    // ========================================================
+    // ====== 终极清除：让这三个多余的HTML节点彻底从视觉上消失！ ======
+    // 使用 CSS !important 和直接隐藏，防住任何浏览器的重置
+    if (textone) { 
+        textone.style.cssText = 'display: none !important;'; 
+        textone.innerHTML = ''; 
+    }
+    if (texttwo) { 
+        texttwo.style.cssText = 'display: none !important;'; 
+        texttwo.innerHTML = ''; 
+    }
+    if (textthree) { 
+        textthree.style.cssText = 'display: none !important;'; 
+        textthree.innerHTML = ''; 
+    }
+    // ==========================================================
 
     initBgParticles();
     generateParticles(titleGroups[0].text);
