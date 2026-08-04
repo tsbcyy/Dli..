@@ -5,7 +5,6 @@ html, body {
 }
 body { display: flex; align-items: center; justify-content: center; position: relative; }
 
-/* --- 前置输入页 --- */
 #entry-screen {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
     background: radial-gradient(circle at center, #1a0b1e, #0a0410);
@@ -35,7 +34,6 @@ body { display: flex; align-items: center; justify-content: center; position: re
 .entry-loading { display: flex; align-items: center; justify-content: center; margin-top: 15px; color: #FFB7C5; font-size: 14px; gap: 10px; }
 .loader-small { width: 18px; height: 18px; border: 2px solid rgba(255, 183, 197, 0.2); border-top: 2px solid #FFB7C5; border-radius: 50%; animation: spin 1s linear infinite; }
 
-/* --- 主界面 --- */
 #main-screen { display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; }
 #static-bg {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -49,7 +47,6 @@ body { display: flex; align-items: center; justify-content: center; position: re
 }
 #particles-canvas { position: absolute; z-index: 1; pointer-events: none; }
 
-/* --- 主标题逐字显现 --- */
 #main-title {
     position: absolute; 
     top: 40%; left: 50%; 
@@ -74,7 +71,6 @@ body { display: flex; align-items: center; justify-content: center; position: re
     transform: translateY(0) scale(1) rotateY(0deg);
 }
 
-/* --- 悬浮祝福语（使用您的init模板动画） --- */
 .container {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     overflow: hidden; z-index: 5; pointer-events: none;
@@ -106,7 +102,6 @@ body { display: flex; align-items: center; justify-content: center; position: re
     100% { transform: rotateY(360deg); }
 }
 
-/* --- 完结层 --- */
 #ending-overlay {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
