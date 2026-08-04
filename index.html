@@ -1,53 +1,57 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="x5-orientation" content="portrait" />
     <meta name="x5-page-mode" content="no-title" />
     <title>生日快乐</title>
     <link rel="stylesheet" href="css/skystar.css">
-  </head>
-  <body>
+</head>
+<body>
+    <!-- 输入页 -->
     <div id="entry-screen">
-      <div class="entry-box">
-        <div class="entry-title">🌟 专属祝福生成器</div>
-        <div class="entry-sub">为亲爱的TA，定制星光璀璨的一刻</div>
-        <div class="input-group">
-          <label>TA 的昵称</label>
-          <input type="text" id="user-name" placeholder="请输入名字" class="entry-input">
+        <div class="entry-box">
+            <div class="entry-title">🌟 专属祝福生成器</div>
+            <div class="entry-sub">为亲爱的TA，定制星光璀璨的一刻</div>
+            <div class="input-group">
+                <label>TA 的昵称</label>
+                <input type="text" id="user-name" placeholder="请输入名字" class="entry-input">
+            </div>
+            <div class="input-group">
+                <label>TA 的生日月份</label>
+                <input type="number" id="user-month" placeholder="1 - 12" min="1" max="12" class="entry-input">
+            </div>
+            <button id="start-btn" class="entry-btn">✨ 开始为她祝福</button>
+            <div id="loading-status" class="entry-loading" style="display:none;">
+                <div class="loader-small"></div>
+                <span>正在加载星空与旋律...</span>
+            </div>
         </div>
-        <div class="input-group">
-          <label>TA 的生日月份</label>
-          <input type="number" id="user-month" placeholder="1 - 12" min="1" max="12" class="entry-input">
-        </div>
-        <button id="start-btn" class="entry-btn">✨ 开始为她祝福</button>
-        <div id="loading-status" class="entry-loading" style="display:none;">
-          <div class="loader-small"></div>
-          <span>正在加载星空与旋律...</span>
-        </div>
-      </div>
     </div>
 
+    <!-- 主界面 -->
     <div id="main-screen" style="display:none;">
-      <div id="static-bg"></div>
-      <!-- 删除原本 three 个标题，保留一个空的主标题容器 -->
-      <div id="main-title" class="main-title"></div>
-      
-      <video id="videofilm" poster="img/skystar2.jpg" loop style="display:none;" muted playsinline webkit-playsinline x5-video-player-type="h5" x5-video-player-fullscreen="true" preload="auto">
-        <source src="video/skystar.mp4" type="video/mp4">
-      </video>
-      <canvas id="particles-canvas"></canvas>
-      <audio id="bg-music" src="video/晴天.mp3" autoplay muted preload="auto"></audio>
-      <div class="container" style="display:none;"></div>
+        <div id="static-bg"></div>
+        <!-- 主标题容器（逐字显现） -->
+        <div id="main-title" class="main-title"></div>
+        
+        <video id="videofilm" poster="img/skystar2.jpg" loop style="display:none;" muted playsinline webkit-playsinline x5-video-player-type="h5" x5-video-player-fullscreen="true" preload="auto">
+            <source src="video/skystar.mp4" type="video/mp4">
+        </video>
+        <canvas id="particles-canvas"></canvas>
+        <audio id="bg-music" src="video/晴天.mp3" autoplay muted preload="auto"></audio>
+        <!-- 悬浮祝福语容器 -->
+        <div class="container" style="display:none;"></div>
     </div>
 
+    <!-- 完结页 -->
     <div id="ending-overlay">
-      <div class="ending-icon">🎂</div>
-      <div class="ending-text">✨ 祝福已全部送达 ✨</div>
-      <div class="ending-sub" id="ending-dynamic">愿你永远被爱包围</div>
+        <div class="ending-icon">🎂</div>
+        <div class="ending-text">✨ 祝福已全部送达 ✨</div>
+        <div class="ending-sub" id="ending-dynamic">愿你永远被爱包围</div>
     </div>
 
     <script src="js/skystar.js"></script>
-  </body>
+</body>
 </html>
