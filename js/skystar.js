@@ -98,7 +98,9 @@ function initBgParticles() {
 
 // ---------- 6. 预加载悬浮词 ----------
 function preloadRandomWords() {
+    if (!container) return;
     container.innerHTML = '';
+    container.classList.remove('show'); // 重置状态
     let f = document.createDocumentFragment();
     words.forEach((w, index) => {
         let word_box = document.createElement('div');
@@ -218,7 +220,16 @@ function startMain(name, month) {
                     video.play().then(() => staticBg.style.display = 'none').catch(() => { video.style.display = 'none'; });
                 }, 500);
             }
-            container.style.display = 'block';
+            
+            // 【核心修复】触发悬浮词（双保险，确保QQ浏览器强制刷新）
+            if (container) {
+                // 第一步：强制解除隐藏
+                container.style.display = 'block';
+                // 第二步：等待浏览器微小重绘后再添加 show 类激活动画
+                setTimeout(() => {
+                    container.classList.add('show');
+                }, 50);
+            }
         }
     }, 5000);
 }
@@ -233,7 +244,6 @@ function preloadAll() {
         loadManager.audioReady = true; 
         checkAllLoaded();
     }).catch(() => {
-        // 失败则退回静音播放，等触摸触发
         bgMusic.muted = true;
         bgMusic.play().catch(()=>{});
         bgMusic.addEventListener('canplaythrough', () => { 
@@ -254,7 +264,7 @@ function preloadAll() {
 resizeCanvas();
 preloadAll();
 
-// 【核心】全局触摸监听：只要手指碰任何地方，立即取消静音并播放（没有延迟感）
+// 全局触摸监听（确保音乐零延迟响）
 document.addEventListener('touchstart', function ensureAudio() {
     if (bgMusic.muted) {
         bgMusic.muted = false;
