@@ -1,4 +1,4 @@
-// ---------- 悬浮祝福语（原本的内容） ----------
+// ---------- 1. 悬浮祝福语 ----------
 var words = [
     '生日快乐', '万事胜意', '平安喜乐', '前程似锦', 
     '岁岁常欢愉', '年年皆胜意', '未来可期', '所愿皆成真',
@@ -9,7 +9,7 @@ var words = [
     '一生可爱', '一世无忧', '前程似锦', '喜乐长安'
 ];
 
-// ---------- 10组主标题 ----------
+// ---------- 2. 10组主标题 ----------
 const titleGroups = [
     { text: "生日快乐\n愿你岁岁常欢愉\n年年皆胜意" },
     { text: "新的一岁，愿你闪闪发光\n万事皆可期待" },
@@ -25,7 +25,7 @@ const titleGroups = [
 
 function randomNum(min, max) { return (Math.random() * (max - min + 1) + min).toFixed(2); }
 
-// ---------- DOM 元素 ----------
+// ---------- 3. DOM 元素 ----------
 const video = document.getElementById('videofilm');
 const bgMusic = document.getElementById('bg-music');
 const container = document.querySelector('.container');
@@ -40,18 +40,15 @@ const userMonthInput = document.getElementById('user-month');
 const endingDynamic = document.getElementById('ending-dynamic');
 const mainTitleEl = document.getElementById('main-title');
 
-// 移除旧的HTML三行标题（如果存在）
+// 移除旧HTML三行标题
 document.querySelectorAll('.textone, .texttwo, .textthree').forEach(el => el.remove());
 
 let switchCount = 0, isEndingShown = false, autoTimer, charInterval = null;
 let bgParticles = [];
-let floatingItems = [];
-let floatAnimId = null;
-
 const isMobile = window.innerWidth <= 600;
 const loadManager = { videoReady: false, audioReady: false, wordsReady: false, isAllReady: false };
 
-// ---------- 主标题逐字显现 ----------
+// ---------- 4. 主标题逐字显现 ----------
 function updateTitle(text) {
     if (charInterval) clearInterval(charInterval);
     mainTitleEl.innerHTML = '';
@@ -73,7 +70,7 @@ function updateTitle(text) {
     }, 70);
 }
 
-// ---------- 背景小粒子 ----------
+// ---------- 5. 背景小粒子 ----------
 function initBgParticles() {
     const W = window.innerWidth, H = window.innerHeight;
     bgParticles = [];
@@ -99,14 +96,10 @@ function initBgParticles() {
     drawBg();
 }
 
-// ---------- 预加载悬浮词（生成DOM，但保持隐藏） ----------
+// ---------- 6. 预加载悬浮词（CSS驱动公转，半径35-45vw） ----------
 function preloadRandomWords() {
     if (!container) return;
     container.innerHTML = '';
-    container.style.display = 'none'; // 初始隐藏
-    if (floatAnimId) cancelAnimationFrame(floatAnimId);
-    floatingItems = [];
-
     let f = document.createDocumentFragment();
     words.forEach((w, index) => {
         let word_box = document.createElement('div');
@@ -117,65 +110,27 @@ function preloadRandomWords() {
         word.style.fontFamily = '楷体';
         word.style.fontSize = isMobile ? '14px' : '18px';
         word_box.classList.add('word-box');
-        
-        // 半径 35-45vw，随机角度（保证不重叠）
-        let dist = parseFloat(randomNum(35, 45));
-        let deg = parseFloat(randomNum(0, 360));
-        let speed = parseFloat(randomNum(8, 15)); // 秒转一圈
-        let delay = 0.2 + index * 0.15; // 延迟淡入
 
-        // 初始位置用transform固定，后面用JS驱动旋转
-        word_box.style.transform = `translate(-50%, -50%) rotate(${deg}deg) translateX(${dist}vw) rotate(-${deg}deg)`;
-        word_box.style.opacity = 0;
-        
+        // 给每个词分配半径（35-45vw）和初始角度
+        let dist = randomNum(35, 45) + 'vw';
+        let deg = randomNum(0, 360) + 'deg';
+        let speed = randomNum(8, 15) + 's';
+        let delay = (index * 0.15) + 's';
+
+        word_box.style.setProperty("--dist", dist);
+        word_box.style.setProperty("--deg", deg);
+        word_box.style.setProperty("--speed", speed);
+        word_box.style.setProperty("--delay", delay);
+
         word_box.appendChild(word);
         f.appendChild(word_box);
-        
-        floatingItems.push({
-            el: word_box,
-            dist: dist,
-            deg: deg,
-            speed: speed,
-            startTime: Date.now() + delay * 1000,
-            started: false
-        });
     });
     container.appendChild(f);
     loadManager.wordsReady = true;
     checkAllLoaded();
 }
 
-// ---------- 驱动悬浮词绕中心公转（JS动画） ----------
-function animateFloating() {
-    if (!container || container.style.display === 'none') {
-        floatAnimId = requestAnimationFrame(animateFloating);
-        return;
-    }
-    const now = Date.now();
-    floatingItems.forEach(item => {
-        // 处理淡入
-        if (now < item.startTime) {
-            item.el.style.opacity = 0;
-            return;
-        }
-        if (!item.started) {
-            item.started = true;
-            item.el.style.transition = 'opacity 0.5s';
-            item.el.style.opacity = 1;
-        }
-
-        let elapsed = (now - item.startTime) / 1000;
-        let angle = item.deg + (elapsed / item.speed) * 360;
-        let rad = angle * Math.PI / 180;
-        let x = Math.cos(rad) * item.dist;
-        let y = Math.sin(rad) * item.dist;
-        
-        item.el.style.transform = `translate(-50%, -50%) translate(${x}vw, ${y}vh)`;
-    });
-    floatAnimId = requestAnimationFrame(animateFloating);
-}
-
-// ---------- 视频原生下载 ----------
+// ---------- 7. 视频原生下载 ----------
 function preloadVideoStandard() {
     video.src = 'video/skystar.mp4';
     video.load();
@@ -194,14 +149,14 @@ function preloadVideoStandard() {
     }, 20000);
 }
 
-// ---------- 加载完成检查 ----------
+// ---------- 8. 加载完成检查 ----------
 function checkAllLoaded() {
     if (loadManager.videoReady && loadManager.audioReady && loadManager.wordsReady) {
         loadManager.isAllReady = true;
     }
 }
 
-// ---------- 大结局 ----------
+// ---------- 9. 大结局 ----------
 function showEnding(name, month) {
     if (isEndingShown) return;
     isEndingShown = true;
@@ -210,7 +165,7 @@ function showEnding(name, month) {
     clearInterval(autoTimer);
 }
 
-// ---------- 开始按钮 ----------
+// ---------- 10. 开始按钮 ----------
 startBtn.addEventListener('click', function() {
     const name = userNameInput.value.trim() || '亲爱的';
     const month = userMonthInput.value.trim() || '每一';
@@ -236,17 +191,17 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 主流程 ----------
+// ---------- 11. 主流程 ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
     initBgParticles();
     updateTitle(titleGroups[0].text);
     
-    // 音乐尝试播放（如果静音则取消）
+    // 音乐取消静音
     bgMusic.muted = false;
     bgMusic.play().catch(() => {
-        bgMusic.muted = true; 
+        bgMusic.muted = true;
         bgMusic.play();
     });
     
@@ -263,7 +218,8 @@ function startMain(name, month) {
             showEnding(name, month);
             return;
         }
-        // 视频在第四个词（index===3）播放
+
+        // 视频在第4句话（index === 3）时触发
         if (index === 3) {
             video.style.display = 'block';
             video.loop = true;
@@ -275,20 +231,23 @@ function startMain(name, month) {
                 }, 500);
             }
         }
-        // 悬浮词在第三次切换后（index===2）释放
+
+        // 【唯一改动】在第三次切换时（index === 2）释放悬浮祝福语
         if (index === 2) {
             if (container) {
-                container.style.display = 'block';
-                container.classList.add('show');
-                // 启动公转动画
-                if (!floatAnimId) animateFloating();
-                console.log('✅ 悬浮祝福语已释放！');
+                // 强制重置所有可能被覆盖的属性
+                container.style.cssText = 'display: block !important; opacity: 1 !important; visibility: visible !important; z-index: 9999 !important;';
+                // 添加 show 类，触发 CSS 中的 orbit 动画
+                setTimeout(() => {
+                    container.classList.add('show');
+                }, 50);
+                console.log('✅ 悬浮词已在第三次切换时释放！');
             }
         }
     }, 5000);
 }
 
-// ---------- 页面启动 ----------
+// ---------- 12. 页面启动 ----------
 function preloadAll() {
     preloadVideoStandard();
     preloadRandomWords();
@@ -315,11 +274,11 @@ function preloadAll() {
     if (bgMusic.readyState >= 4) { loadManager.audioReady = true; checkAllLoaded(); }
 }
 
-// ---------- 启动 ----------
+// ---------- 13. 启动 ----------
 resizeCanvas();
 preloadAll();
 
-// 触摸屏幕取消静音
+// 触摸屏幕时强制取消静音
 document.addEventListener('touchstart', function ensureAudio() {
     if (bgMusic.muted) {
         bgMusic.muted = false;
