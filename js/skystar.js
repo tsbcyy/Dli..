@@ -43,7 +43,7 @@ const userNameInput = document.getElementById('user-name');
 const userMonthInput = document.getElementById('user-month');
 const endingDynamic = document.getElementById('ending-dynamic');
 
-// 获取那三个多余的HTML标题节点
+// 获取多余的HTML标题节点（用于强制移除）
 const textone = document.querySelector('.textone');
 const texttwo = document.querySelector('.texttwo');
 const textthree = document.querySelector('.textthree');
@@ -60,7 +60,7 @@ function resizeCanvas() {
 }
 window.addEventListener('resize', resizeCanvas);
 
-// ---------- 5. 粒子提取（step=1.5） ----------
+// ---------- 5. 粒子提取（【修改】step 改为 2，降低密度） ----------
 function getTextPoints(text) {
     const fontSize = Math.min(W * 0.08, 40);
     const lineHeight = fontSize * 1.3;
@@ -77,7 +77,8 @@ function getTextPoints(text) {
     const imageData = offCtx.getImageData(0, 0, offCanvas.width, offCanvas.height);
     const data = imageData.data;
     const points = [];
-    const step = 1.5; 
+    // 【核心修改】step = 2，比1.5更稀疏，进一步减轻手机负担
+    const step = 2; 
     for (let y = 0; y < offCanvas.height; y += step) {
         for (let x = 0; x < offCanvas.width; x += step) {
             const idx = (y * offCanvas.width + x) * 4;
@@ -100,10 +101,11 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环（手机 2.5px） ----------
+// ---------- 7. 动画循环（【修改】粒子大小调小） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
-    const radius = isMobile ? 2.5 : 4.0; 
+    // 【核心修改】手机端从 2.5px 降为 2.0px，电脑端从 4.0px 降为 3.0px
+    const radius = isMobile ? 2.0 : 3.0; 
     textCtx.shadowColor = '#FFB7C5';
     textCtx.shadowBlur = 6;
     
@@ -230,26 +232,15 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 14. 主流程（【强制物理消失】绝不在手机上残留） ----------
+// ---------- 14. 主流程（保留彻底删除多余HTML节点的逻辑） ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
 
-    // ====== 终极清除：让这三个多余的HTML节点彻底从视觉上消失！ ======
-    // 使用 CSS !important 和直接隐藏，防住任何浏览器的重置
-    if (textone) { 
-        textone.style.cssText = 'display: none !important;'; 
-        textone.innerHTML = ''; 
-    }
-    if (texttwo) { 
-        texttwo.style.cssText = 'display: none !important;'; 
-        texttwo.innerHTML = ''; 
-    }
-    if (textthree) { 
-        textthree.style.cssText = 'display: none !important;'; 
-        textthree.innerHTML = ''; 
-    }
-    // ==========================================================
+    // 彻底从DOM中移除那三个多余的标题容器，确保永不残留
+    if (textone) textone.remove();
+    if (texttwo) texttwo.remove();
+    if (textthree) textthree.remove();
 
     initBgParticles();
     generateParticles(titleGroups[0].text);
