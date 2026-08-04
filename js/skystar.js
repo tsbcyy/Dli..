@@ -9,7 +9,7 @@ var words = [
     '一生可爱', '一世无忧', '前程似锦', '喜乐长安'
 ];
 
-// ---------- 2. 10组主标题（每组包含三行） ----------
+// ---------- 2. 10组主标题 ----------
 const titleGroups = [
     { text: "生日快乐\n愿你岁岁常欢愉\n年年皆胜意" },
     { text: "新的一岁，愿你闪闪发光\n万事皆可期待" },
@@ -43,7 +43,7 @@ const userNameInput = document.getElementById('user-name');
 const userMonthInput = document.getElementById('user-month');
 const endingDynamic = document.getElementById('ending-dynamic');
 
-// 获取那几个多余的标题节点，准备处理它们
+// 获取那三个独立的HTML标题节点
 const textone = document.querySelector('.textone');
 const texttwo = document.querySelector('.texttwo');
 const textthree = document.querySelector('.textthree');
@@ -100,7 +100,7 @@ function generateParticles(text) {
     });
 }
 
-// ---------- 7. 动画循环（绝无中心空白） ----------
+// ---------- 7. 动画循环（大粒子，绝无空白） ----------
 function animateText() {
     textCtx.clearRect(0, 0, W, H);
     const radius = isMobile ? 2.5 : 4.0; 
@@ -230,18 +230,17 @@ startBtn.addEventListener('click', function() {
     }, 30000);
 });
 
-// ---------- 14. 主流程（【核心修复】清空多余的DOM文字） ----------
+// ---------- 14. 主流程（【彻底解决】物理移除多余的HTML标题） ----------
 function startMain(name, month) {
     entryScreen.style.display = 'none';
     mainScreen.style.display = 'block';
 
-    // ========== 关键修正开始 ==========
-    // 杜绝屏幕上出现三次相同的标题
-    // 直接清空 HTML 中那三个独立标题节点里面的文字和子元素
-    if (textone) textone.innerHTML = '';
-    if (texttwo) texttwo.innerHTML = '';
-    if (textthree) textthree.innerHTML = '';
-    // ========== 关键修正结束 ==========
+    // ========== 【彻底解决重复标题的终极方案】 ==========
+    // 直接把这三个节点从DOM树中物理移除，连容器都不留！
+    if (textone) textone.remove();
+    if (texttwo) texttwo.remove();
+    if (textthree) textthree.remove();
+    // ===================================================
 
     initBgParticles();
     generateParticles(titleGroups[0].text);
